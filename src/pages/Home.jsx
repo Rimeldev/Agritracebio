@@ -13,28 +13,30 @@ export default function Home() {
 
       <div className="min-h-screen">
         {/* SECTION HERO */}
-        <div className="min-h-screen bg-gradient-to-br from-white to-yellow-200 h-[610px]">
-          <div className="max-w-6xl mx-auto px-4 py-10 flex flex-col md:flex-row items-center gap-6">
-            
-            {/* Image Ananas */}
-            <img
-              src={ananasImg}
-              alt="Ananas"
-              className="w-[250px] md:w-auto -mt-10 md:-mt-10 -ml-0 md:-ml-10 object-contain animate-ondulation"
-            />
+        <div className="min-h-screen bg-gradient-to-br from-white to-yellow-200 flex items-center justify-center px-4 py-10">
+  <div className="max-w-6xl w-full flex flex-col md:flex-row items-center md:items-start gap-10">
+    
+    {/* Image Ananas */}
+    <div className="flex justify-center md:justify-start w-full md:w-1/2">
+      <img
+        src={ananasImg}
+        alt="Ananas"
+        className="w-500 md:w-500 object-contain animate-ondulation"
+      />
+    </div>
 
-            {/* Texte d'accueil */}
-            <div className="w-full md:w-1/2 text-center md:text-left mt-6 md:mt-[-40px] md:ml-[-600px] px-4">
-              <h1 className="text-3xl md:text-5xl font-bold text-primary mb-4 whitespace-nowrap">
-                Bienvenue sur <span className="text-green-900">AgriTraceBio</span>
-              </h1>
-              <p className="text-green-900 text-lg md:text-3xl">
-                Suivez l’origine de votre ananas <br className="hidden md:block" />
-                en un simple scan.
-              </p>
-            </div>
-          </div>
-        </div>
+    {/* Texte d'accueil */}
+    <div className="w-full md:w-1/2 text-center md:text-left">
+      <h1 className="text-3xl md:text-5xl font-bold text-primary mb-4">
+        Bienvenue sur <span className="text-green-900">AgriTraceBio</span>
+      </h1>
+      <p className="text-green-900 text-lg md:text-2xl leading-relaxed">
+        Suivez l’origine de votre ananas<br className="hidden md:block" />
+        en un simple scan.
+      </p>
+    </div>
+  </div>
+</div>
 
         {/* SECTION VIDÉO */}
         <div className="mt-20">

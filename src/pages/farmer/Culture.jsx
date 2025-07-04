@@ -34,7 +34,7 @@ const Cultures = () => {
     <DashboardLayout>
       <Headerboard
         title="Cultures"
-        farmerName="Jean Agriculteur"
+        farmerName="Agriculteur"
       />
        {/* Bouton + Champ de recherche sur la même ligne */}
 <div className="flex flex-col md:flex-row justify-between items-center mb-4 pt-6 gap-4">

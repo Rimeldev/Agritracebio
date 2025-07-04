@@ -1,31 +1,94 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
+import {
+  LayoutDashboard,
+  PackageCheck,
+  ClipboardList,
+  FileCheck2,
+  Truck,
+  Leaf,
+  BadgeCheck,
+} from "lucide-react";
+
 import logo from "../assets/logo.png";
-import culture from "../assets/icons/culture.png";
-import dashboard from "../assets/icons/dashboard.png";
-import exporter from "../assets/icons/exporter.png";
-import market from "../assets/icons/market.png";
-import truck from "../assets/icons/truck.png";
 import toggleIcon from "../assets/icons/toggleIcon.png";
 
-const Sidebar = () => {
+const Sidebar = ({ userType = "farmer" }) => {
   const [isOpen, setIsOpen] = useState(true);
+  const toggleSidebar = () => setIsOpen(!isOpen);
 
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
+  let menuItems = [];
+
+  if (userType === "authority") {
+    menuItems = [
+      {
+        to: "/controler/Authorization",
+        label: "Demandes d’autorisation",
+        icon: <BadgeCheck className="h-5 w-5" />,
+      },
+      {
+        to: "/authority/Inspections",
+        label: "Inspections",
+        icon: <ClipboardList className="h-5 w-5" />,
+      },
+      {
+        to: "/authority/Certificats",
+        label: "Certificats",
+        icon: <FileCheck2 className="h-5 w-5" />,
+      },
+    ];
+  } else if (userType === "exporter") {
+    menuItems = [
+      {
+        to: "/exportateur/Dashboard",
+        label: "Tableau de bord",
+        icon: <LayoutDashboard className="h-5 w-5" />,
+      },
+      {
+        to: "/exportateur/lots",
+        label: "Lots producteurs",
+        icon: <PackageCheck className="h-5 w-5" />,
+      },
+      {
+        to: "/exportateur/programme",
+        label: "Programme ABSSA",
+        icon: <ClipboardList className="h-5 w-5" />,
+      },
+      {
+        to: "/exportateur/certificats",
+        label: "Certificats",
+        icon: <FileCheck2 className="h-5 w-5" />,
+      },
+      {
+        to: "/exportateur/expedition",
+        label: "Préparation expédition",
+        icon: <Truck className="h-5 w-5" />,
+      },
+    ];
+  } else {
+    menuItems = [
+      {
+        to: "/farmer/Dashboard",
+        label: "Tableau de bord",
+        icon: <LayoutDashboard className="h-5 w-5" />,
+      },
+      {
+        to: "/farmer/Culture",
+        label: "Cultures",
+        icon: <Leaf className="h-5 w-5" />,
+      },
+    ];
+  }
 
   return (
     <aside
-      className={`
-        min-h-screen bg-white border-r border-gray-100 shadow-md
-        flex flex-col
-        transition-all duration-300
+      className={`min-h-screen bg-white border-r border-gray-100 shadow-md
+        flex flex-col transition-all duration-300
         ${isOpen ? "w-52" : "w-16"}
       `}
     >
-      {/* En-tête avec logo et bouton toggle */}
+      {/* En-tête */}
       <div className="flex items-center justify-between bg-[#233D1C] p-2">
         {isOpen && <img src={logo} alt="Logo" className="h-10" />}
         <button
@@ -37,45 +100,16 @@ const Sidebar = () => {
         </button>
       </div>
 
-      {/* Recherche 
-      {isOpen && (
-        <div className="p-2">
-          <input
-            type="text"
-            placeholder="Rechercher ..."
-            className="w-full mt-1 px-2 py-1 rounded border border-[#FFBE00] bg-white focus:outline-none text-sm"
-          />
-        </div>
-      )}
-        */}
-
-      {/* Navigation */}
+      {/* Menu */}
       <nav className="mt-4 flex flex-col gap-2 px-2 flex-1">
-        <SidebarItem
-          to="/farmer/Dashboard"
-          icon={<img src={dashboard} alt="" className="h-5 w-5" />}
-          label={isOpen ? "Tableau de bord" : ""}
-        />
-        <SidebarItem
-          to="/farmer/Culture"
-          icon={<img src={culture} alt="" className="h-5 w-5" />}
-          label={isOpen ? "Cultures" : ""}
-        />
-        <SidebarItem
-          to="/farmer/Transports"
-          icon={<img src={exporter} alt="" className="h-5 w-5" />}
-          label={isOpen ? "Transports" : ""}
-        />
-        <SidebarItem
-          to="/farmer/Market"
-          icon={<img src={market} alt="" className="h-5 w-5" />}
-          label={isOpen ? "Mise sur le marché" : ""}
-        />
-        <SidebarItem
-          to="/farmer/Exportations"
-          icon={<img src={truck} alt="" className="h-5 w-5" />}
-          label={isOpen ? "Exportations" : ""}
-        />
+        {menuItems.map((item) => (
+          <SidebarItem
+            key={item.to}
+            to={item.to}
+            icon={item.icon}
+            label={isOpen ? item.label : ""}
+          />
+        ))}
       </nav>
     </aside>
   );

@@ -1,6 +1,6 @@
 // pages/Cultures.jsx
 import DashboardLayout from "@/components/DashboardLayout";
-import Headerboard from "@/components/Headerboard";
+import UserMenu from "@/components/UserMenu";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -14,7 +14,7 @@ const Cultures = () => {
       variété: "Smooth Cayenne",
       localisation: "Parakou",
       dateDebut: "2024-05-10",
-      statut: "En cours",
+      statut: "en production",
     },
     {
       id: 2,
@@ -22,7 +22,7 @@ const Cultures = () => {
       variété: "Kassa 17",
       localisation: "Djougou",
       dateDebut: "2024-03-01",
-      statut: "Récolté",
+      statut: "exportée",
     },
   ]);
 
@@ -32,10 +32,8 @@ const Cultures = () => {
 
   return (
     <DashboardLayout>
-      <Headerboard
-        title="Cultures"
-        farmerName="Agriculteur"
-      />
+    <UserMenu farmerName="Agriculteur" />
+    <h1 className="text-2xl font-bold text-green-900 mt-4 mb-2">Mes cultures</h1>
        {/* Bouton + Champ de recherche sur la même ligne */}
 <div className="flex flex-col md:flex-row justify-between items-center mb-4 pt-6 gap-4">
   <input
@@ -46,7 +44,7 @@ const Cultures = () => {
     onChange={(e) => setSearchTerm(e.target.value)}
   />
   <button
-    onClick={() => navigate('/farmer/Cultures/add')}
+    onClick={() => navigate('/AddCulture')}
     className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-200"
   >
     + Ajouter une culture
@@ -76,7 +74,7 @@ const Cultures = () => {
                 <td className="p-3">
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      culture.statut === "En cours"
+                      culture.statut === "en production"
                         ? "bg-yellow-100 text-yellow-800"
                         : "bg-green-100 text-green-800"
                     }`}
@@ -84,12 +82,16 @@ const Cultures = () => {
                     {culture.statut}
                   </span>
                 </td>
-                <td className="p-3 flex gap-2">
-                  <button className="text-blue-600 hover:underline text-sm">
-                    Voir
-                  </button>
-                  <button className="text-green-600 hover:underline text-sm">
+                <td className="p-3 flex gap-4">
+                  <button
+                    className="text-green-600 hover:underline text-sm"
+                    onClick={() => navigate('/AddCulture', { state: { culture } })}
+                  >
                     Modifier
+                  </button>
+
+                  <button className="text-red-600 hover:underline text-sm">
+                    Supprimer
                   </button>
                 </td>
               </tr>

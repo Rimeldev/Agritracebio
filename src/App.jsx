@@ -10,6 +10,9 @@ import VerificationPage from './pages/VerificationPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import Exportateur from './pages/Exportateur/DashboardExportateur';
 import Trace from './pages/trace';
+import MyAccount from './pages/MyAccount';
+import AddCulture from './pages/farmer/AddCulture';
+
 
 
 function App() {
@@ -25,6 +28,8 @@ function App() {
         <Route path="/admin" element={<AdminDashboard/>} />
         <Route path="/trace" element={<Trace/>} />
         <Route path="/exportateur/Dashboard" element={<Exportateur/>} />
+        <Route path="/mon-compte" element={<MyAccount />} />
+        <Route path="/AddCulture" element={<AddCulture />} />
       </Routes>
   );
 }

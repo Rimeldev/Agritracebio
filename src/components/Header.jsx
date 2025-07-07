@@ -15,7 +15,7 @@ const Header = () => {
         
        {/* Logo cliquable */}
   <Link to="/">
-    <img src={logo} alt="Logo" className="h-14" />
+    <img src={logo} alt="Logo" className="h-15" />
   </Link>
 
         {/* Menu hamburger (mobile) */}

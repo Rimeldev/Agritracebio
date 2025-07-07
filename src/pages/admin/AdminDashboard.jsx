@@ -1,51 +1,41 @@
-import AdminHeader from "@/components/AdminHeader";
 import { useState } from "react";
-import Action from "@/assets/icons/action.png";
+import AdminHeader from "@/components/AdminHeader";
+
+
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("utilisateurs");
-
-  const stats = [
-    {
-      label: "Utilisateurs Total",
-      value: 156,
-      change: "+12% ce mois",
-    },
-    {
-      label: "Cultures Enregistrées",
-      value: 89,
-      change: "+8% ce mois",
-    },
-    {
-      label: "Volume Production (T)",
-      value: 2450,
-      change: "+15% ce mois",
-    },
-    {
-      label: "Taux Export (%)",
-      value: "38.2%",
-      change: "+5% ce mois",
-    },
-  ];
+  const [userFilter, setUserFilter] = useState("Tous");
 
   const users = [
     {
+      id: 1,
       name: "Jean Baptiste Koffi",
       email: "jb.koffi@email.com",
       type: "Agriculteur",
       status: "Actif",
       lastLogin: "2024-06-01",
       cultures: 3,
+      dispositif: {
+        id: "DISP-001",
+        status: "Actif",
+      },
     },
     {
+      id: 2,
       name: "Marie Adjovi",
       email: "m.adjovi@email.com",
       type: "Agriculteur",
-      status: "Actif",
+      status: "Suspendu",
       lastLogin: "2024-05-30",
       cultures: 2,
+      dispositif: {
+        id: "DISP-002",
+        status: "Inactif",
+      },
     },
     {
+      id: 3,
       name: "Inspecteur Dossou",
       email: "a.dossou@abssa.bj",
       type: "Inspecteur",
@@ -53,51 +43,41 @@ const AdminDashboard = () => {
       lastLogin: "2024-06-02",
       cultures: 0,
     },
-    {
-      name: "Paul Agbangla",
-      email: "p.agbangla@email.com",
-      type: "Agriculteur",
-      status: "Suspendu",
-      lastLogin: "2024-05-15",
-      cultures: 1,
-    },
-    {
-      name: "Export Corp Sarl",
-      email: "contact@exportcorp.bj",
-      type: "Exportateur",
-      status: "Actif",
-      lastLogin: "2024-06-01",
-      cultures: 0,
-    },
   ];
+
+  const filteredUsers =
+    userFilter === "Tous"
+      ? users
+      : users.filter((u) => u.type === userFilter);
+
+  const suspendUser = (user) => {
+    alert(`Le compte de ${user.name} est suspendu. Un email est envoyé.`);
+    // Ici, tu enverras une requête au backend pour changer le statut + envoyer un mail.
+  };
+
+  const toggleDispositifStatus = (user) => {
+    const currentStatus = user.dispositif?.status;
+    const newStatus = currentStatus === "Actif" ? "Inactif" : "Actif";
+    alert(`Dispositif ${user.dispositif.id} est maintenant ${newStatus}`);
+    // Ici, appel backend pour mettre à jour le statut
+  };
 
   return (
     <div className="flex">
       <div className="flex-1 flex flex-col">
         <AdminHeader username="Administrateur" />
 
-        <main className="p-6 bg-gray-50 min-h-screen space-y-6">
-          {/* Statistiques */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {stats.map((stat, index) => (
-              <div key={index} className="bg-white rounded-lg shadow p-4">
-                <h3 className="text-gray-500 text-sm">{stat.label}</h3>
-                <p className="text-2xl font-bold">{stat.value}</p>
-                <p className="text-green-600 text-sm">{stat.change}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Navigation */}
-          <div className="flex space-x-4 border-b">
-            {["Utilisateurs", "Traçabilité", "Statistiques", "Blockchain"].map((tab) => (
+        <main className="p-6 bg-gray-50 space-y-6 ">
+          {/* Onglets navigation */}
+          <div className="flex space-x-6 border-b pb-2">
+            {["Utilisateurs", "Cultures", "Dispositifs"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab.toLowerCase())}
-                className={`px-4 py-2 ${
+                className={`text-sm pb-2 border-b-2 transition-all duration-150 ${
                   activeTab === tab.toLowerCase()
-                    ? "border-b-2 border-green-700 text-green-700 font-semibold"
-                    : "text-gray-600"
+                    ? "border-green-600 text-green-700 font-semibold"
+                    : "border-transparent text-gray-500 hover:text-green-600"
                 }`}
               >
                 {tab}
@@ -105,56 +85,87 @@ const AdminDashboard = () => {
             ))}
           </div>
 
-          {/* Gestion des utilisateurs */}
+          {/* UTILISATEURS */}
           {activeTab === "utilisateurs" && (
             <section>
-              <h2 className="text-xl font-bold mb-4">
-                Gestion des Comptes Utilisateurs
-              </h2>
-              <p className="text-sm text-gray-600 mb-4">
-                Contrôle, suspension et suppression des comptes utilisateurs
-              </p>
-              <input
-                type="text"
-                placeholder="Rechercher un utilisateur…"
-                className="mb-4 px-4 py-2 border rounded w-full md:w-1/3"
-              />
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Comptes utilisateurs</h2>
+                <select
+                  value={userFilter}
+                  onChange={(e) => setUserFilter(e.target.value)}
+                  className="border rounded px-3 py-1 text-sm"
+                >
+                  {['Tous', 'Agriculteur', 'Inspecteur', 'Exportateur'].map((type) => (
+                    <option key={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="overflow-x-auto bg-white rounded shadow">
-                <table className="w-full table-auto">
-                  <thead className="bg-gray-100 text-gray-700">
+                <table className="w-full table-auto text-sm">
+                  <thead className="bg-gray-100 text-left">
                     <tr>
-                      <th className="px-4 py-2 text-left">Nom</th>
-                      <th className="px-4 py-2 text-left">Email</th>
-                      <th className="px-4 py-2 text-left">Type</th>
-                      <th className="px-4 py-2 text-left">Statut</th>
-                      <th className="px-4 py-2 text-left">Dernière Connexion</th>
-                      <th className="px-4 py-2 text-left">Cultures</th>
-                      <th className="px-4 py-2 text-left">Actions</th>
+                      <th className="p-3">Nom</th>
+                      <th className="p-3">Email</th>
+                      <th className="p-3">Type</th>
+                      <th className="p-3">Statut</th>
+                      <th className="p-3">Dern. Connexion</th>
+                      <th className="p-3">Cultures</th>
+                      <th className="p-3">Dispositif</th>
+                      <th className="p-3">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((user, index) => (
-                      <tr key={index} className="border-t">
-                        <td className="px-4 py-2">{user.name}</td>
-                        <td className="px-4 py-2">{user.email}</td>
-                        <td className="px-4 py-2">{user.type}</td>
-                        <td className="px-4 py-2">
+                    {filteredUsers.map((user) => (
+                      <tr key={user.id} className="border-t">
+                        <td className="p-3">{user.name}</td>
+                        <td className="p-3">{user.email}</td>
+                        <td className="p-3">{user.type}</td>
+                        <td className="p-3">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
                               user.status === "Actif"
-                                ? "bg-green-200 text-green-800"
-                                : "bg-red-200 text-red-800"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
                             }`}
                           >
                             {user.status}
                           </span>
                         </td>
-                        <td className="px-4 py-2">{user.lastLogin}</td>
-                        <td className="px-4 py-2">{user.cultures}</td>
-                        <td className="px-4 py-2">
-                          <button className="bg-gray-200 px-2 py-1 rounded hover:bg-gray-300">
-                              <img src={Action} alt="Logo AgriTraceBio" className="h-5" />
-                          </button>
+                        <td className="p-3">{user.lastLogin}</td>
+                        <td className="p-3">{user.cultures}</td>
+                        <td className="p-3">
+                          {user.dispositif ? (
+                            <div className="flex flex-col gap-1">
+                              <span className="text-xs font-mono">
+                                ID: {user.dispositif.id}
+                              </span>
+                              <button
+                                onClick={() => toggleDispositifStatus(user)}
+                                className={`text-xs rounded px-2 py-1 ${
+                                  user.dispositif.status === "Actif"
+                                    ? "bg-green-200 text-green-800"
+                                    : "bg-gray-200 text-gray-600"
+                                }`}
+                              >
+                                {user.dispositif.status}
+                              </button>
+                            </div>
+                          ) : (
+                            <button className="text-blue-600 text-xs hover:underline">
+                              Ajouter
+                            </button>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          {user.status === "Actif" && user.type === "Agriculteur" && (
+                            <button
+                              onClick={() => suspendUser(user)}
+                              className="text-red-600 text-xs hover:underline"
+                            >
+                              Suspendre
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}

@@ -1,80 +1,181 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import AdminHeader from "@/components/AdminHeader";
-
-
+import UsersTab from "@/components/UsersTab";
+import CulturesTab from "@/components/CulturesTab";
+import DispositifsTab from "@/components/DeviceTab";
+import { getAllCulturesAdmin } from "@/services/getAllCulturesAdmin";
+import { addDispositifToCulture } from "@/services/dispositifService";
+import { getAllUsers,getDeletedUsers,toggleAdminRole,toggleUserSuspension } from "@/services/userService";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("utilisateurs");
-  const [userFilter, setUserFilter] = useState("Tous");
 
-  const users = [
-    {
-      id: 1,
-      name: "Jean Baptiste Koffi",
-      email: "jb.koffi@email.com",
-      type: "Agriculteur",
-      status: "Actif",
-      lastLogin: "2024-06-01",
-      cultures: 3,
-      dispositif: {
-        id: "DISP-001",
-        status: "Actif",
-      },
-    },
-    {
-      id: 2,
-      name: "Marie Adjovi",
-      email: "m.adjovi@email.com",
-      type: "Agriculteur",
-      status: "Suspendu",
-      lastLogin: "2024-05-30",
-      cultures: 2,
-      dispositif: {
-        id: "DISP-002",
-        status: "Inactif",
-      },
-    },
-    {
-      id: 3,
-      name: "Inspecteur Dossou",
-      email: "a.dossou@abssa.bj",
-      type: "Inspecteur",
-      status: "Actif",
-      lastLogin: "2024-06-02",
-      cultures: 0,
-    },
-  ];
+  // Utilisateurs
+  const [users, setUsers] = useState([]); // ✅ Correct
+  const [userFilter, setUserFilter] = useState("Tous"); // ✅ Correct
+  const [showDeleted, setShowDeleted] = useState(false);
 
-  const filteredUsers =
-    userFilter === "Tous"
-      ? users
-      : users.filter((u) => u.type === userFilter);
+  // Cultures
+  const [selectedFarmer, setSelectedFarmer] = useState("Tous");
+  const [cultures, setCultures] = useState([]);
+  const [userMap, setUserMap] = useState({});
 
-  const suspendUser = (user) => {
-    alert(`Le compte de ${user.name} est suspendu. Un email est envoyé.`);
-    // Ici, tu enverras une requête au backend pour changer le statut + envoyer un mail.
+  // Dispositifs
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newDispositif, setNewDispositif] = useState({ nom: "", culture_id: "" });
+  const [dispositifs, setDispositifs] = useState([]);
+
+  // Charger les utilisateurs selon le filtre
+ useEffect(() => {
+  const fetchUsers = async () => {
+    try {
+      if (showDeleted) {
+        // Récupérer uniquement les comptes supprimés
+        const deletedUsers = await getDeletedUsers();
+        setUsers(deletedUsers);
+      } else {
+        const typeMap = {
+          Tous: null,
+          Agriculteur: "agriculteur",
+          Contrôleur: "controlleur",
+          Exportateur: "exportateur",
+        };
+        const userType = typeMap[userFilter];
+        const data = await getAllUsers(userType);
+        setUsers(data);
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des utilisateurs :", error);
+      toast.error("Erreur lors du chargement des utilisateurs.");
+    }
   };
 
-  const toggleDispositifStatus = (user) => {
-    const currentStatus = user.dispositif?.status;
-    const newStatus = currentStatus === "Actif" ? "Inactif" : "Actif";
-    alert(`Dispositif ${user.dispositif.id} est maintenant ${newStatus}`);
-    // Ici, appel backend pour mettre à jour le statut
+  if (activeTab === "utilisateurs") {
+    fetchUsers();
+  }
+}, [userFilter, showDeleted, activeTab]);
+
+const toggleSuspension = async (user) => {
+  try {
+    const action = user.is_active ? "suspendre" : "réactiver";
+    if (!window.confirm(`Voulez-vous vraiment ${action} ${user.prenom} ${user.nom} ?`)) return;
+
+    await toggleUserSuspension(user.id);
+
+    toast.success(
+      user.is_active
+        ? `${user.prenom} ${user.nom} a été suspendu.`
+        : `${user.prenom} ${user.nom} a été réactivé.`
+    );
+
+    // Mise à jour locale de la liste des users
+    setUsers((prevUsers) =>
+      prevUsers.map((u) =>
+        u.id === user.id ? { ...u, is_active: !u.is_active } : u
+      )
+    );
+  } catch (error) {
+    toast.error("Erreur lors de la modification du statut utilisateur.");
+    console.error(error);
+  }
+};
+
+
+  // Charger les cultures
+  useEffect(() => {
+    const fetchCultures = async () => {
+      try {
+        const data = await getAllCulturesAdmin(
+          selectedFarmer !== "Tous" ? selectedFarmer : null
+        );
+
+        setCultures(data);
+
+        // Construire la map user_id -> nom
+        const newMap = {};
+        data.forEach((culture) => {
+          if (culture.user && culture.agriculteur_nom) {
+            newMap[culture.user] = culture.agriculteur_nom;
+          }
+        });
+        setUserMap(newMap);
+      } catch (error) {
+        console.error("Erreur lors du chargement des cultures :", error);
+        toast.error("Erreur lors du chargement des cultures.");
+      }
+    };
+
+    if (activeTab === "cultures" || activeTab === "dispositifs") {
+      fetchCultures();
+    }
+  }, [selectedFarmer, activeTab]);
+
+ const promoteToAdmin = async (user) => {
+  try {
+    const confirmMsg = user.is_admin
+      ? `Retirer le rôle admin à ${user.prenom} ${user.nom} ?`
+      : `Donner le rôle admin à ${user.prenom} ${user.nom} ?`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    await toggleAdminRole(user.id);
+
+    toast.success(
+      user.is_admin
+        ? `${user.prenom} ${user.nom} n'est plus admin.`
+        : `${user.prenom} ${user.nom} est maintenant admin.`
+    );
+
+    // Mise à jour locale de la liste users (toggle is_admin)
+    setUsers((prevUsers) =>
+      prevUsers.map((u) =>
+        u.id === user.id ? { ...u, is_admin: !u.is_admin } : u
+      )
+    );
+  } catch (error) {
+    toast.error("Erreur lors de la modification du rôle admin.");
+    console.error(error);
+  }
+};
+
+
+  // Ajouter un dispositif
+  const addDispositif = async () => {
+    if (newDispositif.nom && newDispositif.culture_id) {
+      try {
+        console.log("Données envoyées :", newDispositif);
+        const res = await addDispositifToCulture({
+          nom: newDispositif.nom,
+          culture_id: newDispositif.culture_id,
+        });
+
+        toast.success("Dispositif ajouté avec succès !");
+        setNewDispositif({ nom: "", culture_id: "" });
+        setShowAddModal(false);
+
+        setDispositifs((prev) => [...prev, res.data]);
+      } catch (error) {
+        console.error("Erreur lors de l'ajout :", error.response?.data || error.message);
+        toast.error(error.response?.data?.message || "Erreur lors de l'ajout du dispositif.");
+      }
+    }
   };
+
+  const activateDispositif = (d) => toast.success(`Dispositif "${d.nom}" activé.`);
+  const deactivateDispositif = (d) => toast.warn(`Dispositif "${d.nom}" désactivé.`);
 
   return (
     <div className="flex">
       <div className="flex-1 flex flex-col">
-        <AdminHeader username="Administrateur" />
-
-        <main className="p-6 bg-gray-50 space-y-6 ">
-          {/* Onglets navigation */}
+        <AdminHeader />
+        <main className="p-6 bg-gray-50 space-y-6">
           <div className="flex space-x-6 border-b pb-2">
             {["Utilisateurs", "Cultures", "Dispositifs"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab.toLowerCase())}
-                className={`text-sm pb-2 border-b-2 transition-all duration-150 ${
+                className={`text-sm pb-2 border-b-2 ${
                   activeTab === tab.toLowerCase()
                     ? "border-green-600 text-green-700 font-semibold"
                     : "border-transparent text-gray-500 hover:text-green-600"
@@ -85,94 +186,39 @@ const AdminDashboard = () => {
             ))}
           </div>
 
-          {/* UTILISATEURS */}
           {activeTab === "utilisateurs" && (
-            <section>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Comptes utilisateurs</h2>
-                <select
-                  value={userFilter}
-                  onChange={(e) => setUserFilter(e.target.value)}
-                  className="border rounded px-3 py-1 text-sm"
-                >
-                  {['Tous', 'Agriculteur', 'Inspecteur', 'Exportateur'].map((type) => (
-                    <option key={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
+            <UsersTab
+              users={users}
+              userFilter={userFilter}
+              showDeleted={showDeleted}
+              setUserFilter={setUserFilter}
+              setShowDeleted={setShowDeleted}
+              toggleSuspension={toggleSuspension}
+              promoteToAdmin={promoteToAdmin}
+            />
+          )}
 
-              <div className="overflow-x-auto bg-white rounded shadow">
-                <table className="w-full table-auto text-sm">
-                  <thead className="bg-gray-100 text-left">
-                    <tr>
-                      <th className="p-3">Nom</th>
-                      <th className="p-3">Email</th>
-                      <th className="p-3">Type</th>
-                      <th className="p-3">Statut</th>
-                      <th className="p-3">Dern. Connexion</th>
-                      <th className="p-3">Cultures</th>
-                      <th className="p-3">Dispositif</th>
-                      <th className="p-3">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredUsers.map((user) => (
-                      <tr key={user.id} className="border-t">
-                        <td className="p-3">{user.name}</td>
-                        <td className="p-3">{user.email}</td>
-                        <td className="p-3">{user.type}</td>
-                        <td className="p-3">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              user.status === "Actif"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700"
-                            }`}
-                          >
-                            {user.status}
-                          </span>
-                        </td>
-                        <td className="p-3">{user.lastLogin}</td>
-                        <td className="p-3">{user.cultures}</td>
-                        <td className="p-3">
-                          {user.dispositif ? (
-                            <div className="flex flex-col gap-1">
-                              <span className="text-xs font-mono">
-                                ID: {user.dispositif.id}
-                              </span>
-                              <button
-                                onClick={() => toggleDispositifStatus(user)}
-                                className={`text-xs rounded px-2 py-1 ${
-                                  user.dispositif.status === "Actif"
-                                    ? "bg-green-200 text-green-800"
-                                    : "bg-gray-200 text-gray-600"
-                                }`}
-                              >
-                                {user.dispositif.status}
-                              </button>
-                            </div>
-                          ) : (
-                            <button className="text-blue-600 text-xs hover:underline">
-                              Ajouter
-                            </button>
-                          )}
-                        </td>
-                        <td className="p-3">
-                          {user.status === "Actif" && user.type === "Agriculteur" && (
-                            <button
-                              onClick={() => suspendUser(user)}
-                              className="text-red-600 text-xs hover:underline"
-                            >
-                              Suspendre
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+          {activeTab === "cultures" && (
+            <CulturesTab
+              cultures={cultures}
+              userMap={userMap}
+              selectedFarmer={selectedFarmer}
+              setSelectedFarmer={setSelectedFarmer}
+            />
+          )}
+
+          {activeTab === "dispositifs" && (
+            <DispositifsTab
+              dispositifs={dispositifs}
+              cultures={cultures}
+              showAddModal={showAddModal}
+              setShowAddModal={setShowAddModal}
+              newDispositif={newDispositif}
+              setNewDispositif={setNewDispositif}
+              addDispositif={addDispositif}
+              activateDispositif={activateDispositif}
+              deactivateDispositif={deactivateDispositif}
+            />
           )}
         </main>
       </div>

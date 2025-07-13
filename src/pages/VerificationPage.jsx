@@ -1,11 +1,18 @@
 import { useState, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
 import Header from "../components/Header";
 import logo2Img from "../assets/4.png";
+import { verifyUserAccount, resendVerificationCode } from "../services/verifyService";
 
 export default function Verification() {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const inputRefs = useRef([]);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const email = location.state?.email;
 
   const handleChange = (index, value) => {
     if (!/^[0-9]?$/.test(value)) return;
@@ -29,27 +36,39 @@ export default function Verification() {
     e.preventDefault();
     const finalCode = code.join("");
 
-    if (finalCode.length < 6) {
-      setError("Veuillez entrer les 6 chiffres.");
+    if (finalCode.length !== 6) {
+      toast.error("Veuillez entrer les 6 chiffres.");
+      return;
+    }
+
+    if (!email) {
+      toast.error("Aucun email fourni. Veuillez vous réinscrire.");
       return;
     }
 
     try {
-      const res = await fetch("/api/verify-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: finalCode }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Code invalide");
-      }
-
-      window.location.href = "/dashboard";
+      setLoading(true);
+      await verifyUserAccount({ email, verification_code: finalCode });
+      toast.success("Compte vérifié avec succès !");
+      navigate("/login");
     } catch (err) {
-      setError(err.message);
+      toast.error(err?.response?.data?.message || "Code invalide.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email) {
+      toast.error("Email introuvable. Veuillez vous réinscrire.");
+      return;
+    }
+
+    try {
+      await resendVerificationCode(email);
+      toast.success("Code renvoyé par email !");
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Erreur de renvoi.");
     }
   };
 
@@ -57,7 +76,6 @@ export default function Verification() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
 
-      {/* Vérification Form */}
       <main className="flex-grow flex items-center justify-center px-4 pb-10">
         <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md mt-8">
           {/* Logo */}
@@ -95,23 +113,23 @@ export default function Verification() {
               ))}
             </div>
 
-            {error && (
-              <p className="text-red-600 text-sm mb-4 text-center">{error}</p>
-            )}
+           <button
+  type="submit"
+  disabled={loading}
+  className={`w-full bg-green-800 hover:bg-green-900 text-white py-2 rounded-lg font-semibold transition ${
+    loading ? "opacity-60 cursor-not-allowed" : ""
+  }`}
+>
+  {loading ? "Validation..." : "Valider"}
+</button>
 
-            <button
-              type="submit"
-              className="w-full bg-green-800 hover:bg-green-900 text-white py-2 rounded-lg font-semibold transition"
-            >
-              Valider
-            </button>
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-4">
             Pas reçu de code ?{" "}
             <button
               type="button"
-              onClick={() => alert("Code renvoyé (fonction à implémenter)")}
+              onClick={handleResend}
               className="text-green-800 font-semibold hover:underline"
             >
               Renvoyer le code

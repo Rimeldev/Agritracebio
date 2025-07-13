@@ -2,52 +2,44 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-import logo2Img from "../assets/4.png";
-import appleImg from "../assets/apple.png";
-import googleImg from "../assets/google.png";
-import Header from "../components/Header";
-import { loginUser } from "../services/authService";
+import logo2Img from "@/assets/4.png";
+import appleImg from "@/assets/apple.png";
+import googleImg from "@/assets/google.png";
+import Header from "@/components/Header";
+import { loginUser } from "@/services/authService";
 
-export default function Login() {
+export default function LoginAdmin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!email || !password) {
-      toast.error("Veuillez remplir tous les champs.");
-      return;
-    }
+  if (!email || !password) {
+    toast.error("Veuillez remplir tous les champs.");
+    return;
+  }
 
-    try {
-      setLoading(true);
-      const res = await loginUser({ email, password });
+  try {
+    setLoading(true);
+    const res = await loginUser({ email, password });
+
+    const user = res.data.user;
+    const role = user.type_utilisateur;
+    const isAdmin = user.is_admin;
+
+    if (role === "controlleur" && isAdmin) {
       toast.success(res.message || "Connexion réussie !");
       localStorage.setItem("token", res.data.access_token);
-      localStorage.setItem("user_id", res.data.user.id);
-      localStorage.setItem("user_role", res.data.user.type_utilisateur);
-      localStorage.setItem("is_admin", res.data.user.is_admin);
+      localStorage.setItem("user_id", user.id);
+      localStorage.setItem("user_role", role);
+      localStorage.setItem("is_admin", true);
 
-
-    // Redirection selon le rôle
-    const role = res.data.user.type_utilisateur;
-
-    switch (role) {
-      case "agriculteur":
-        navigate("/farmer/Dashboard");
-        break;
-      case "exportateur":
-        navigate("/exportateur/Dashboard");
-        break;
-      case "controlleur":
-        navigate("/controler/Authorization");
-        break;
-      default:
-        toast.error("Rôle inconnu. Contactez l'administrateur.");
-        break;
+      navigate("/admin");
+    } else {
+      toast.error("Accès refusé. Seuls les administrateurs sont autorisés ici.");
     }
   } catch (error) {
     toast.error(error?.response?.data?.message || "Identifiants invalides.");
@@ -55,6 +47,7 @@ export default function Login() {
     setLoading(false);
   }
 };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />

@@ -1,11 +1,26 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import profil from '../assets/icons/profil.png';
+import { getMyProfile } from "@/services/getMyProfileService";
+import defaultAvatar from "../assets/icons/profil.png";
+import { logoutUser } from "@/services/logoutService";
 
-const UserMenu = ({ farmerName }) => {
+const UserMenu = ({ nameColor = "text-green-900" }) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [user, setUser] = useState(null);
   const menuRef = useRef(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const data = await getMyProfile();
+        setUser(data);
+      } catch (error) {
+        console.error("Erreur de chargement du profil :", error);
+      }
+    };
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -14,36 +29,56 @@ const UserMenu = ({ farmerName }) => {
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleAccountClick = () => {
-    setShowMenu(false); // fermer le menu
-    navigate('/mon-compte'); // ✅ redirection
+    setShowMenu(false);
+    navigate('/mon-compte');
   };
 
-  const handleLogout = () => {
-    setShowMenu(false);
-    // Ajoute ici ta logique de déconnexion
-    navigate("/");
+  const handleLogout = async () => {
+  try {
+    await logoutUser(); // appel API
+  } catch (error) {
+    console.error("Erreur de déconnexion :", error);
+    // tu peux ajouter un toast ici si tu veux
+  }
+
+  setShowMenu(false);
+  localStorage.removeItem("token");
+  localStorage.removeItem("user_id");
+  navigate("/");
+};
+
+
+  const getAvatarUrl = () => {
+    if (user?.avatar) {
+      // Nettoie le chemin et ajoute un timestamp pour forcer le rafraîchissement après upload
+      const cleanedPath = user.avatar.replace(/^\/+/, '');
+      return `http://127.0.0.1:5000/${cleanedPath}?t=${Date.now()}`;
+    }
+    return defaultAvatar;
   };
 
   return (
     <div className="flex flex-col items-end mt-0 relative" ref={menuRef}>
       <img
-        src={profil}
+        src={getAvatarUrl()}
         alt="Profil"
-        className="h-10 cursor-pointer rounded-full"
+        className="h-10 w-10 cursor-pointer rounded-full object-cover border"
         onClick={() => setShowMenu(!showMenu)}
+        onError={(e) => (e.target.src = defaultAvatar)} // fallback si erreur
       />
-      <span
-        className="mt-1 text-sm font-medium cursor-pointer text-green-900"
-        onClick={() => setShowMenu(!showMenu)}
-      >
-        {farmerName}
-      </span>
+
+      {user?.nom && (
+        <span
+          className={`mt-1 text-sm font-medium cursor-pointer ${nameColor}`}
+          onClick={() => setShowMenu(!showMenu)}
+        >
+          {user.nom}
+        </span>
+      )}
 
       {showMenu && (
         <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-50">
@@ -55,7 +90,7 @@ const UserMenu = ({ farmerName }) => {
           </button>
           <button
             onClick={handleLogout}
-            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+            className="block w-full text-red-600 px-4 py-2 hover:bg-gray-100"
           >
             Déconnexion
           </button>

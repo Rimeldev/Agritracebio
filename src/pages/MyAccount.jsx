@@ -1,38 +1,127 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import UserMenu from '@/components/UserMenu';
+import { changePassword } from "@/services/changePasswordService";
+import { uploadAvatar } from "@/services/avatarService";
+import { updateProfile } from "@/services/updateProfileService";
+import { getMyProfile } from "@/services/getMyProfileService";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { deleteMyAccount } from "@/services/deleteAccountService";
 
 const MyAccount = () => {
+  const navigate = useNavigate();
+
+  const [photo, setPhoto] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [lastName, setLastName] = useState('');
   const [firstName, setFirstName] = useState('');
-  const [email, setEmail] = useState('johndoe@example.com');
+  const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleDeleteAccount = () => {
-    if (window.confirm("⚠️ Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.")) {
-      alert("Votre compte a été supprimé.");
-      // Appel API de suppression ici
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await getMyProfile();
+        setLastName(res.nom || "");
+        setFirstName(res.prenom || "");
+        setEmail(res.email || "");
+        setAddress(res.adresse || "");
+        setPhone(res.telephone || "");
+        if (res.avatar) {
+          setPreviewUrl("http://127.0.0.1:5000" + res.avatar); // adapte si nécessaire
+        }
+      } catch (err) {
+         toast.error(err?.response?.data?.message || "Erreur lors du chargement du profil.");
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const handleDeleteAccount = async () => {
+  if (window.confirm("⚠️ Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.")) {
+    try {
+      const res = await deleteMyAccount();
+      toast.success(res.message || "Compte supprimé avec succès");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user_id");
+      window.location.href = "/"; // ou navigate("/")
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Erreur lors de la suppression du compte");
     }
+  }
+};
+
+  const isValidPhone = (value) => {
+    const phoneRegex = /^\+?\d{8,15}$/;
+    return phoneRegex.test(value);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    alert("Modifications enregistrées.");
-    // Appel API d'enregistrement ici
-  };
-
-  const handlePasswordChange = (e) => {
-    e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      alert("❌ Les mots de passe ne correspondent pas.");
+    if (phone && !isValidPhone(phone)) {
+      toast.error("Le numéro de téléphone est invalide.");
       return;
     }
-    alert("Mot de passe modifié avec succès.");
-    // Appel API de changement de mot de passe ici
+
+    try {
+      setLoading(true);
+      if (photo) {
+        const resAvatar = await uploadAvatar(photo);
+        toast.success(resAvatar.message);
+      }
+
+      const profileData = {
+        nom: lastName,
+        prenom: firstName,
+        email: email,
+        adresse: address,
+        telephone: phone,
+      };
+
+      const res = await updateProfile(profileData);
+      toast.success(res.message || "Profil mis à jour !");
+        navigate("/farmer/Dashboard"); // redirection après succès
+    } catch (error) {
+      const message = error?.response?.data?.message;
+      if (message?.toLowerCase().includes("email")) {
+        toast.error("Cet email est déjà utilisé.");
+      } else {
+        toast.error(message || "Erreur lors de la mise à jour du profil.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await changePassword({
+        old_password: oldPassword,
+        new_password: newPassword,
+      });
+      toast.success("Mot de passe modifié avec succès !");
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Erreur lors du changement de mot de passe.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -40,7 +129,6 @@ const MyAccount = () => {
       <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="flex-1 flex flex-col">
-        {/* Header top-right */}
         <div className="flex justify-end p-4">
           <UserMenu farmerName="Agriculteur" />
         </div>
@@ -52,6 +140,25 @@ const MyAccount = () => {
           <section className="bg-white border border-gray-200 rounded-lg p-6 mb-10 shadow">
             <h2 className="text-xl font-semibold text-green-800 mb-6">Informations personnelles</h2>
             <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Photo de profil</label>
+                {previewUrl && (
+                  <img src={previewUrl} alt="Aperçu" className="h-24 w-24 rounded-full object-cover mb-2 border" />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      setPhoto(file);
+                      setPreviewUrl(URL.createObjectURL(file));
+                    }
+                  }}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
                 <input
@@ -59,10 +166,10 @@ const MyAccount = () => {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md"
-                  placeholder="Votre nom"
                   required
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
                 <input
@@ -70,10 +177,21 @@ const MyAccount = () => {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md"
-                  placeholder="Votre prénom"
                   required
                 />
               </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  placeholder="Ex : +229xxxxxxxx"
+                />
+              </div>
+
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                 <input
@@ -81,10 +199,10 @@ const MyAccount = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md"
-                  placeholder="Votre email"
                   required
                 />
               </div>
+
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
                 <input
@@ -92,13 +210,14 @@ const MyAccount = () => {
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md"
-                  placeholder="Votre adresse"
                 />
               </div>
+
               <div className="md:col-span-2 flex gap-4 justify-start mt-2">
                 <button
                   type="submit"
-                  className="bg-green-700 text-white px-6 py-2 rounded hover:bg-green-800 transition"
+                  disabled={loading}
+                  className="bg-green-700 text-white px-6 py-2 rounded hover:bg-green-800 transition disabled:opacity-50"
                 >
                   Enregistrer
                 </button>
@@ -112,7 +231,7 @@ const MyAccount = () => {
             </form>
           </section>
 
-          {/* Modification du mot de passe */}
+          {/* Modification mot de passe */}
           <section className="bg-white border border-gray-200 rounded-lg p-6 mb-10 shadow">
             <h2 className="text-xl font-semibold text-green-800 mb-6">Modifier le mot de passe</h2>
             <form onSubmit={handlePasswordChange} className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -149,15 +268,10 @@ const MyAccount = () => {
               <div className="md:col-span-3 flex gap-4 justify-start mt-2">
                 <button
                   type="submit"
-                  className="bg-green-700 text-white px-6 py-2 rounded hover:bg-green-800 transition"
+                  disabled={loading}
+                  className="bg-green-700 text-white px-6 py-2 rounded hover:bg-green-800 transition disabled:opacity-50"
                 >
                   Modifier
-                </button>
-                <button
-                  type="reset"
-                  className="border border-gray-300 px-6 py-2 rounded hover:bg-gray-100"
-                >
-                  Annuler
                 </button>
               </div>
             </form>

@@ -1,7 +1,10 @@
 import DashboardLayout from "@/components/DashboardLayout";
-import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import UserMenu from "@/components/UserMenu";
+import { createCulture } from "@/services/createCultureService";
+import { useEffect, useState } from "react";
+import { getExportateurs } from "@/services/getExportateursService";
+import { toast } from "react-toastify";
 
 const AjouterCulture = () => {
   const navigate = useNavigate();
@@ -12,21 +15,50 @@ const AjouterCulture = () => {
     nom_culture: cultureToEdit?.nom || "",
     variete: cultureToEdit?.variété || "",
     localisation: cultureToEdit?.localisation || "",
-    exportateur: "", // à remplir si besoin
+    exportateur: "",
   });
 
-  const exportateurs = ["Exportateur A", "Exportateur B", "Exportateur C"];
+  const [exportateurs, setExportateurs] = useState([]);
+
+  useEffect(() => {
+    const fetchExportateurs = async () => {
+      try {
+        const data = await getExportateurs();
+        setExportateurs(data);
+      } catch (error) {
+        console.error("Erreur de chargement des exportateurs :", error);
+        toast.error("Impossible de charger les exportateurs.");
+      }
+    };
+    fetchExportateurs();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Données soumises :", formData);
-    // Redirection après enregistrement
-    // navigate('/farmer/Cultures');
+
+    try {
+      const payload = {
+        nom_culture: formData.nom_culture,
+        variete: formData.variete,
+        localisation: formData.localisation,
+      };
+
+      if (formData.exportateur) {
+        payload.exportateur_id = formData.exportateur;
+      }
+
+      await createCulture(payload);
+      toast.success("Culture ajoutée avec succès !");
+      navigate("/farmer/Culture");
+    } catch (error) {
+      console.error("Erreur ajout culture :", error);
+      toast.error("Échec de l’ajout de la culture.");
+    }
   };
 
   return (
@@ -103,9 +135,9 @@ const AjouterCulture = () => {
                 className="w-full border border-gray-300 p-2 rounded"
               >
                 <option value="">-- Aucun exportateur associé --</option>
-                {exportateurs.map((exp, index) => (
-                  <option key={index} value={exp}>
-                    {exp}
+                {exportateurs.map((exp) => (
+                  <option key={exp.id} value={exp.id}>
+                    {exp.prenom} {exp.nom}
                   </option>
                 ))}
               </select>

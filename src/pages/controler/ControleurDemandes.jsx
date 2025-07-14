@@ -2,10 +2,13 @@ import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import InspectionModal from "@/components/InspectionModal";
 import UserMenu from "@/components/UserMenu";
+import DemandeDetailModal from "@/components/DemandeDetailModal";
+
 
 const ControleurDemandes = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedDemande, setSelectedDemande] = useState(null);
+const [showDetailModal, setShowDetailModal] = useState(false);
 
   const [demandes, setDemandes] = useState([
     {
@@ -21,7 +24,7 @@ const ControleurDemandes = () => {
       date: "2025-07-12",
       exportateur: "TropicFresh",
       cultures: 1,
-      statut: "en cours",
+      statut: "en attente",
       email: "tropic@fresh.com",
     },
   ]);
@@ -53,7 +56,7 @@ const ControleurDemandes = () => {
 
   return (
     <DashboardLayout>
-      <UserMenu farmerName="Controleur" />
+      <UserMenu />
       <h1 className="text-2xl font-bold text-green-900 mt-4 mb-1">Demandes d’inspection</h1>
       <p className="text-sm text-gray-600 mb-6">
         Liste des demandes envoyées par les exportateurs.
@@ -89,11 +92,15 @@ const ControleurDemandes = () => {
                 </td>
                 <td className="p-3 text-center space-x-2">
                   <button
-                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs px-3 py-1 rounded"
-                    onClick={() => alert("Voir détails de " + demande.id)}
-                  >
-                    Voir détails
-                  </button>
+  className="bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs px-3 py-1 rounded"
+  onClick={() => {
+    setSelectedDemande(demande);
+    setShowDetailModal(true);
+  }}
+>
+  Voir détails
+</button>
+
                   <button
                     onClick={() => openModal(demande)}
                     className="bg-green-700 hover:bg-green-800 text-white text-xs px-3 py-1 rounded"
@@ -115,6 +122,14 @@ const ControleurDemandes = () => {
           email={selectedDemande.email}
         />
       )}
+      {showDetailModal && selectedDemande && (
+  <DemandeDetailModal
+    isOpen={showDetailModal}
+    onClose={() => setShowDetailModal(false)}
+    demande={selectedDemande}
+  />
+)}
+
     </DashboardLayout>
   );
 };

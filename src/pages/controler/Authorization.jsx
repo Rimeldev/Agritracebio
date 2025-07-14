@@ -1,60 +1,66 @@
 import DashboardLayout from "@/components/DashboardLayout";
-import DemandeAttenteIcon from "@/assets/icons/demandeattente.png";
-import DemandeApprouveeIcon from "@/assets/icons/demandeapprouvee.png";
-import InspectionIcon from "@/assets/icons/inspection0.png";
-import CertificatIcon from "@/assets/icons/certificatIcon.png";
 import UserMenu from "@/components/UserMenu";
+import {
+  ClipboardList,
+  Clock,
+  CheckCircle,
+  FileCheck2,
+} from "lucide-react";
 
-const Authorization = () => {
+const ControleurDashboard = () => {
+  const stats = [
+    {
+      label: "Total demandes reçues",
+      value: 18,
+      icon: <ClipboardList className="w-6 h-6 text-blue-700" />,
+      color: "text-blue-700",
+    },
+    {
+      label: "Demandes en cours",
+      value: 6,
+      icon: <Clock className="w-6 h-6 text-yellow-600" />,
+      color: "text-yellow-600",
+    },
+    {
+      label: "Demandes traitées",
+      value: 12,
+      icon: <CheckCircle className="w-6 h-6 text-green-600" />,
+      color: "text-green-600",
+    },
+    {
+      label: "Certificats émis",
+      value: 9,
+      icon: <FileCheck2 className="w-6 h-6 text-gray-700" />,
+      color: "text-gray-700",
+    },
+  ];
+
   return (
     <DashboardLayout>
-     <UserMenu farmerName="Controleur" /> 
-      <main className="p-6 space-y-6">
-       
+      <UserMenu />
+      <div className="mt-4 mb-6">
+        <h1 className="text-2xl font-bold text-green-900">Tableau de bord</h1>
+        <p className="text-sm text-gray-600">
+          Vue d’ensemble des activités d’inspection sanitaire.
+        </p>
+      </div>
 
-        {/* Cartes Statistiques */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            {
-              label: "Demandes en attente",
-              value: 1,
-              color: "text-yellow-500",
-              icon: DemandeAttenteIcon,
-            },
-            {
-              label: "Demandes approuvées",
-              value: 1,
-              color: "text-green-600",
-              icon: DemandeApprouveeIcon,
-            },
-            {
-              label: "Inspections programmées",
-              value: 1,
-              color: "text-blue-600",
-              icon: InspectionIcon,
-            },
-            {
-              label: "Certificats délivrés",
-              value: 0,
-              color: "text-gray-500",
-              icon: CertificatIcon,
-            },
-          ].map(({ label, value, color, icon }) => (
-            <div
-              key={label}
-              className="bg-white shadow rounded-lg p-4 flex items-center justify-between"
-            >
-              <div>
-                <h4 className="text-sm text-gray-600">{label}</h4>
-                <p className={`text-2xl font-bold ${color}`}>{value}</p>
-              </div>
-              <img src={icon} alt={label} className="w-10 h-10" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((stat) => (
+          <div
+            key={stat.label}
+            className="bg-white rounded-lg shadow p-4 flex items-center justify-between"
+          >
+            <div>
+              <h4 className="text-sm text-gray-600">{stat.label}</h4>
+              <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
             </div>
-          ))}
-        </div>
-      </main>
+            <div>{stat.icon}</div>
+          </div>
+        ))}
+      </div>
     </DashboardLayout>
   );
 };
 
-export default Authorization;
+export default ControleurDashboard;

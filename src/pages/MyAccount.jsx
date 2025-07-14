@@ -34,7 +34,8 @@ const MyAccount = () => {
         setAddress(res.adresse || "");
         setPhone(res.telephone || "");
         if (res.avatar) {
-          setPreviewUrl("http://127.0.0.1:5000" + res.avatar); // adapte si nécessaire
+          const correctedPath = res.avatar.replace("files/avatars", "avatars");
+setPreviewUrl(`http://127.0.0.1:5000/${correctedPath}`);
         }
       } catch (err) {
          toast.error(err?.response?.data?.message || "Erreur lors du chargement du profil.");
@@ -50,7 +51,7 @@ const MyAccount = () => {
       toast.success(res.message || "Compte supprimé avec succès");
       localStorage.removeItem("token");
       localStorage.removeItem("user_id");
-      window.location.href = "/"; // ou navigate("/")
+      window.location.href = "/";
     } catch (error) {
       toast.error(error?.response?.data?.message || "Erreur lors de la suppression du compte");
     }
@@ -62,42 +63,53 @@ const MyAccount = () => {
     return phoneRegex.test(value);
   };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
-    if (phone && !isValidPhone(phone)) {
-      toast.error("Le numéro de téléphone est invalide.");
-      return;
+ const handleSave = async (e) => {
+  e.preventDefault();
+  if (phone && !isValidPhone(phone)) {
+    toast.error("Le numéro de téléphone est invalide.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+    if (photo) {
+      const resAvatar = await uploadAvatar(photo);
+      toast.success(resAvatar.message);
     }
 
-    try {
-      setLoading(true);
-      if (photo) {
-        const resAvatar = await uploadAvatar(photo);
-        toast.success(resAvatar.message);
-      }
+    const profileData = {
+      nom: lastName,
+      prenom: firstName,
+      email: email,
+      adresse: address,
+      telephone: phone,
+    };
 
-      const profileData = {
-        nom: lastName,
-        prenom: firstName,
-        email: email,
-        adresse: address,
-        telephone: phone,
-      };
+    const res = await updateProfile(profileData);
+    toast.success(res.message || "Profil mis à jour !");
+    
+    // ✅ Redirection dynamique selon le rôle
+    const role = sessionStorage.getItem("user_role") || "farmer";
+    if (role === "controlleur") {
+  navigate("/controler/Authorization");
+} else if (role === "exportateur") {
+  navigate("/exportateur/Dashboard");
+} else {
+  navigate("/farmer/Dashboard");
+}
 
-      const res = await updateProfile(profileData);
-      toast.success(res.message || "Profil mis à jour !");
-        navigate("/farmer/Dashboard"); // redirection après succès
-    } catch (error) {
-      const message = error?.response?.data?.message;
-      if (message?.toLowerCase().includes("email")) {
-        toast.error("Cet email est déjà utilisé.");
-      } else {
-        toast.error(message || "Erreur lors de la mise à jour du profil.");
-      }
-    } finally {
-      setLoading(false);
+  } catch (error) {
+    const message = error?.response?.data?.message;
+    if (message?.toLowerCase().includes("email")) {
+      toast.error("Cet email est déjà utilisé.");
+    } else {
+      toast.error(message || "Erreur lors de la mise à jour du profil.");
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();

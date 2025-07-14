@@ -33,10 +33,10 @@ const Sidebar = ({ userType = "farmer" }) => {
         icon: <FileCheck2 className="h-5 w-5" />,
       },
       {
-        to: "/controleur/certificats",
-        label: "Certificats émis",
-        icon: <BadgeCheck className="h-5 w-5" />,
-      },
+      to: "/controleur/Resultats",
+      label: "Résultats inspections",
+      icon: <PackageCheck className="h-5 w-5" />, 
+    },
     ];
   } else if (userType === "exportateur") {
     menuItems = [

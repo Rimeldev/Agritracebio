@@ -55,7 +55,7 @@ const UserMenu = ({ nameColor = "text-green-900" }) => {
   const getAvatarUrl = () => {
     if (user?.avatar) {
       // Nettoie le chemin et ajoute un timestamp pour forcer le rafraîchissement après upload
-      const cleanedPath = user.avatar.replace(/^\/+/, '');
+      const cleanedPath = user.avatar.replace("files/", "").replace(/^\/+/, '');
       return `http://127.0.0.1:5000/${cleanedPath}?t=${Date.now()}`;
     }
     return defaultAvatar;

@@ -7,6 +7,7 @@ import Dashboard from './pages/farmer/Dashboard';
 import Culture from './pages/farmer/Culture';
 import Authorization from './pages/controler/Authorization';
 import ControleurDemandes from './pages/controler/ControleurDemandes';
+import ResultatsInspection from './pages/controler/ResultatsInspection';
 import VerificationPage from './pages/VerificationPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminAccount from './pages/admin/AdminAccount';
@@ -25,6 +26,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoginAdmin from './pages/admin/LoginAdmin';
+import ConsommateurProduit from "./pages/ConsommateurProduit";
 
 function App() {
   return (
@@ -87,6 +89,11 @@ function App() {
             <ControleurDemandes />
           </PrivateRoute>
         } />
+        <Route path="/controleur/Resultats" element={
+          <PrivateRoute>
+            <ResultatsInspection />
+          </PrivateRoute>
+        } />
 
         <Route path="/exportateur/Dashboard" element={
           <PrivateRoute>
@@ -123,6 +130,8 @@ function App() {
             <ExportateurCertificats />
           </PrivateRoute>
         } />
+        
+<Route path="/produit/:produitId" element={<ConsommateurProduit />} />
       </Routes>
 
       <ToastContainer position="top-right" autoClose={3000} />

@@ -26,3 +26,23 @@ export const addDispositifToCulture = async (dispositifData) => {
     throw error; // relancer pour que le composant parent le gère
   }
 };
+
+const API_URLL = "http://127.0.0.1:5000/api/admin/dispositifs";
+
+export const getAllDispositifsAdmin = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Aucun token trouvé");
+
+    const response = await axios.get(API_URLL, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data.data || [];
+  } catch (error) {
+    console.error("Erreur lors de la récupération des dispositifs :", error);
+    throw error;
+  }
+};

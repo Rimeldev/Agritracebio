@@ -15,7 +15,6 @@ import { getMyCultures } from "@/services/getMyCulturesService";
 
 const Dashboard = () => {
   const [activeCultures, setActiveCultures] = useState([
-    { id: "507f1f77bcf86cd799439011", nom_culture: "Tomates" }, // à remplacer par un fetch dynamique si besoin
   ]);
   const [selectedCulture, setSelectedCulture] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10)); // format YYYY-MM-DD
@@ -52,8 +51,7 @@ const Dashboard = () => {
         const result = await getCultureDashboard(selectedCulture, {
           page: 1,
           perPage: 10,
-          startDate: start,
-          endDate: end,
+          
         });
 
         setCultureInfo(result.culture);
@@ -78,15 +76,32 @@ const Dashboard = () => {
   ];
 
   const chartDataByParameter = {
-    "Température du sol": iotData.map((d) => ({
-      date: new Date(d.date_creation).toLocaleDateString("fr-FR"),
-      valeur: parseFloat(d.temperature_sol),
-    })),
-    "Température de l’air": iotData.map((d) => ({
-      date: new Date(d.date_creation).toLocaleDateString("fr-FR"),
-      valeur: parseFloat(d.temperature_air),
-    })),
-  };
+  "Température du sol": iotData.map((d) => ({
+    date: new Date(d.date_creation).toLocaleDateString("fr-FR"),
+    valeur: parseFloat(d.temperature_sol),
+  })),
+  "Température de l’air": iotData.map((d) => ({
+    date: new Date(d.date_creation).toLocaleDateString("fr-FR"),
+    valeur: parseFloat(d.temperature_air),
+  })),
+  "Humidité du sol": iotData.map((d) => ({
+    date: new Date(d.date_creation).toLocaleDateString("fr-FR"),
+    valeur: parseFloat(d.humidite_sol),
+  })),
+  "Humidité de l’air": iotData.map((d) => ({
+    date: new Date(d.date_creation).toLocaleDateString("fr-FR"),
+    valeur: parseFloat(d.humidite_air),
+  })),
+  "pH du sol": iotData.map((d) => ({
+    date: new Date(d.date_creation).toLocaleDateString("fr-FR"),
+    valeur: parseFloat(d.ph_sol),
+  })),
+  "Qualité de l’air": iotData.map((d) => ({
+    date: new Date(d.date_creation).toLocaleDateString("fr-FR"),
+    valeur: parseFloat(d.qualite_air),
+  })),
+};
+
 
   return (
     <DashboardLayout>

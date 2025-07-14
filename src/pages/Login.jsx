@@ -30,7 +30,7 @@ export default function Login() {
       localStorage.setItem("user_id", res.data.user.id);
       localStorage.setItem("user_role", res.data.user.type_utilisateur);
       localStorage.setItem("is_admin", res.data.user.is_admin);
-
+      sessionStorage.setItem("user_role", res.data.user.type_utilisateur);
 
     // Redirection selon le rôle
     const role = res.data.user.type_utilisateur;

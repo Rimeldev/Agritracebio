@@ -5,7 +5,7 @@ import UsersTab from "@/components/UsersTab";
 import CulturesTab from "@/components/CulturesTab";
 import DispositifsTab from "@/components/DeviceTab";
 import { getAllCulturesAdmin } from "@/services/getAllCulturesAdmin";
-import { addDispositifToCulture } from "@/services/dispositifService";
+import { addDispositifToCulture,getAllDispositifsAdmin } from "@/services/dispositifService";
 import { getAllUsers,getDeletedUsers,toggleAdminRole,toggleUserSuspension } from "@/services/userService";
 
 const AdminDashboard = () => {
@@ -81,6 +81,22 @@ const toggleSuspension = async (user) => {
   }
 };
 
+// Charger les dispositifs (à chaque fois que l'onglet est "dispositifs")
+useEffect(() => {
+  const fetchDispositifs = async () => {
+    try {
+      const data = await getAllDispositifsAdmin();
+      setDispositifs(data);
+    } catch (error) {
+      console.error("Erreur lors du chargement des dispositifs :", error);
+      toast.error("Erreur lors du chargement des dispositifs.");
+    }
+  };
+
+  if (activeTab === "dispositifs") {
+    fetchDispositifs();
+  }
+}, [activeTab]);
 
   // Charger les cultures
   useEffect(() => {
@@ -94,12 +110,16 @@ const toggleSuspension = async (user) => {
 
         // Construire la map user_id -> nom
         const newMap = {};
-        data.forEach((culture) => {
-          if (culture.user && culture.agriculteur_nom) {
-            newMap[culture.user] = culture.agriculteur_nom;
-          }
-        });
-        setUserMap(newMap);
+data.forEach((culture) => {
+  if (culture.user && culture.user.id &&
+  culture.user.is_deleted === false) {
+    newMap[culture.user.id] = `${culture.user.prenom} ${culture.user.nom}`;
+  }
+});
+setUserMap(newMap);
+
+
+
       } catch (error) {
         console.error("Erreur lors du chargement des cultures :", error);
         toast.error("Erreur lors du chargement des cultures.");

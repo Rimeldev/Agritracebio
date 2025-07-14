@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '@/components/Sidebar';
+import DashboardLayout from "@/components/DashboardLayout";
 import UserMenu from '@/components/UserMenu';
 import { changePassword } from "@/services/changePasswordService";
 import { uploadAvatar } from "@/services/avatarService";
@@ -14,7 +14,6 @@ const MyAccount = () => {
 
   const [photo, setPhoto] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [lastName, setLastName] = useState('');
   const [firstName, setFirstName] = useState('');
   const [email, setEmail] = useState('');
@@ -125,8 +124,9 @@ const MyAccount = () => {
   };
 
   return (
+    <DashboardLayout>
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+      
 
       <div className="flex-1 flex flex-col">
         <div className="flex justify-end p-4">
@@ -293,6 +293,7 @@ const MyAccount = () => {
         </main>
       </div>
     </div>
+    </DashboardLayout>
   );
 };
 

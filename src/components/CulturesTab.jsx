@@ -2,15 +2,19 @@ import React from "react";
 
 const CulturesTab = ({ cultures, userMap, selectedFarmer, setSelectedFarmer }) => {
   // Extraire tous les agriculteurs uniques depuis userMap
-  const farmerOptions = Object.entries(userMap).map(([id, name]) => ({
+  const farmerOptions = Object.entries(userMap)
+  .filter(([id, name]) => id !== undefined && name !== undefined)
+  .map(([id, name]) => ({
     id,
     name,
   }));
 
+
   // Filtrer les cultures selon l’agriculteur sélectionné
-  const filteredCultures = cultures.filter(
-    (c) => selectedFarmer === "Tous" || c.user === selectedFarmer
-  );
+ const filteredCultures = cultures.filter(
+  (c) => selectedFarmer === "Tous" || c.user?.id === selectedFarmer
+);
+
 
   return (
     <section>
@@ -70,7 +74,8 @@ const CulturesTab = ({ cultures, userMap, selectedFarmer, setSelectedFarmer }) =
                       {c.statut}
                     </span>
                   </td>
-                  <td className="p-3">{userMap[c.user] || "—"}</td>
+                  <td className="p-3">{userMap[c.user?.id] || "—"}</td>
+
                 </tr>
               );
             })}

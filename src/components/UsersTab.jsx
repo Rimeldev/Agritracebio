@@ -92,16 +92,16 @@ const UsersTab = ({
                     </span>
                   </td>
                   <td className="p-3 space-y-1 text-center">
-                                    {!user.is_deleted && (user.type_utilisateur === "agriculteur" || user.type_utilisateur === "exportateur") && (
-                    <button
-                      onClick={() => toggleSuspension(user)}
-                      className={`text-xs hover:underline ${
-                        user.is_active ? "text-red-600" : "text-green-600"
-                      }`}
-                    >
-                      {user.is_active ? "Suspendre" : "Réactiver"}
-                    </button>
-                  )}
+                   {!user.is_deleted && (user.type_utilisateur === "agriculteur" || user.type_utilisateur === "exportateur") && (
+  <button
+    onClick={() => toggleSuspension(user)}
+    className={`text-xs hover:underline ${
+      user.is_active ? "text-red-600" : "text-green-600"
+    }`}
+  >
+    {user.is_active ? "Suspendre" : "Réactiver"}
+  </button>
+)}
 
 
                     {!user.is_deleted && user.type_utilisateur === "controlleur" && (

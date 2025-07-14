@@ -20,25 +20,25 @@ const Sidebar = ({ userType = "farmer" }) => {
 
   let menuItems = [];
 
-  if (userType === "authority") {
+  if (userType === "controlleur") {
     menuItems = [
       {
         to: "/controler/Authorization",
-        label: "Demandes d’autorisation",
-        icon: <BadgeCheck className="h-5 w-5" />,
-      },
-      {
-        to: "/authority/Inspections",
-        label: "Inspections",
+        label: "Tableau de bord",
         icon: <ClipboardList className="h-5 w-5" />,
       },
       {
-        to: "/authority/Certificats",
-        label: "Certificats",
+        to: "/controleur/demandes",
+        label: "Demandes reçues",
         icon: <FileCheck2 className="h-5 w-5" />,
       },
+      {
+        to: "/controleur/certificats",
+        label: "Certificats émis",
+        icon: <BadgeCheck className="h-5 w-5" />,
+      },
     ];
-  } else if (userType === "exporter") {
+  } else if (userType === "exportateur") {
     menuItems = [
       {
         to: "/exportateur/Dashboard",
@@ -46,24 +46,24 @@ const Sidebar = ({ userType = "farmer" }) => {
         icon: <LayoutDashboard className="h-5 w-5" />,
       },
       {
-        to: "/exportateur/lots",
-        label: "Lots producteurs",
-        icon: <PackageCheck className="h-5 w-5" />,
+        to: "/exportateur/Culture",
+        label: "Cultures affiliées",
+        icon: <Leaf className="h-5 w-5" />,
       },
       {
-        to: "/exportateur/programme",
-        label: "Programme ABSSA",
+        to: "/exportateur/mes-demandes",
+        label: "Demandes d'inspection",
         icon: <ClipboardList className="h-5 w-5" />,
+      },
+      {
+        to: "/exportateur/validation",
+        label: "Validation finale",
+        icon: <Truck className="h-5 w-5" />,
       },
       {
         to: "/exportateur/certificats",
         label: "Certificats",
         icon: <FileCheck2 className="h-5 w-5" />,
-      },
-      {
-        to: "/exportateur/expedition",
-        label: "Préparation expédition",
-        icon: <Truck className="h-5 w-5" />,
       },
     ];
   } else {

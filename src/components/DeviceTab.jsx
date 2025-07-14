@@ -43,17 +43,27 @@ const DispositifsTab = ({
               <th className="p-3">Nom</th>
               <th className="p-3">Culture associée</th>
               <th className="p-3">Date d'installation</th>
+              <th className="p-3">Agriculteur</th>
               <th className="p-3">Statut</th>
               <th className="p-3">Actions</th>
             </tr>
           </thead>
           <tbody>
             {dataDispositifs.map((dispo) => (
-  <tr key={dispo._id || dispo.nom} className="border-t">
-                <td className="p-3 font-mono text-xs">{dispo._id}</td>
+<tr key={dispo.id || dispo.nom} className="border-t">
+  <td className="p-3 font-mono text-xs">{dispo.id}</td>
                 <td className="p-3">{dispo.nom}</td>
                 <td className="p-3">{cultureMap[dispo.culture_id] || "-"}</td>
-                <td className="p-3">{dispo.date_installation}</td>
+                <td className="p-3">
+  {new Date(dispo.date_installation).toLocaleDateString()}
+</td>
+<td className="p-3">
+  {dispo.culture?.user
+    ? `${dispo.culture.user.prenom} ${dispo.culture.user.nom}`
+    : "—"}
+</td>
+
+
                 <td className="p-3">
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${

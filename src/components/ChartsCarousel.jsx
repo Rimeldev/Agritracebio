@@ -11,9 +11,10 @@ const parametres = [
   "Qualité de l’air"
 ];
 
-export default function DashboardGraph(chartData) {
+export default function DashboardGraph({ chartData }) {
   const [parametreActif, setParametreActif] = useState("Température du sol");
   const data = chartData?.[parametreActif] || [];
+console.log("📊 Données pour le graphique :", data);
 
   return (
     <div className="p-4">

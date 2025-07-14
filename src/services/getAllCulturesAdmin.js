@@ -24,6 +24,6 @@ export const getAllCulturesAdmin = async (agriculteur_id = null) => {
     return response.data.data || [];
   } catch (error) {
     console.error("Erreur lors de la récupération des cultures admin :", error);
-    throw error; // tu peux aussi retourner [] ici si tu préfères éviter un crash
+    throw error;
   }
 };

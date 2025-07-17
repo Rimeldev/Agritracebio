@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import UserMenu from "@/components/UserMenu";
+import { getAllDemandesInspection } from "@/services/controleurDemandeService";
 
 const ResultatsInspection = () => {
   const [selectedDemande, setSelectedDemande] = useState(null);
@@ -8,35 +9,61 @@ const ResultatsInspection = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [certificatFile, setCertificatFile] = useState(null);
   const [resultats, setResultats] = useState({});
+  const [filterStatut, setFilterStatut] = useState("all");
+  const [demandesEnCours, setDemandesEnCours] = useState([]);
 
-  const [demandesEnCours, setDemandesEnCours] = useState([
-    {
-      id: "DEM001",
-      exportateur: "AGRIEXPORT BENIN",
-      date: "2025-07-10",
-      cultures: [
-        { id: "CULT001", nom: "Ananas Cayenne – Lokossa" },
-        { id: "CULT002", nom: "Ananas Pain de sucre – Zogbodomey" },
-      ],
-      resultatsSoumis: false,
-      certificat: null,
-      resultats: {},
-    },
-    {
-      id: "DEM002",
-      exportateur: "TropicFresh",
-      date: "2025-07-12",
-      cultures: [{ id: "CULT003", nom: "Mangue Kent – Bembéréké" }],
-      resultatsSoumis: true,
-      certificat: "/certificats/DEM002.pdf",
-      resultats: {
-        CULT003: {
-          resultat: "Test de maturité OK, pas de résidu détecté",
-          statut: "validée",
-        },
-      },
-    },
-  ]);
+  const statutColors = {
+    en_attente: "bg-red-100 text-red-700",
+    en_cours: "bg-yellow-100 text-yellow-700",
+    validée: "bg-green-100 text-green-700",
+    rejetée: "bg-red-100 text-red-700",
+  };
+
+  useEffect(() => {
+    const fetchDemandes = async () => {
+      try {
+        const allDemandes = await getAllDemandesInspection();
+        const sansEnAttente = allDemandes.filter(
+          (demande) => demande.statut !== "en_attente"
+        );
+        const formatees = sansEnAttente.map((d, index) => ({
+  ...d,
+  numero: `DEM${(index + 1).toString().padStart(3, "0")}`,
+  nbCultures: d.cultures?.length ?? 0,
+  exportateur: `${d.exportateur_id?.prenom ?? ""} ${d.exportateur_id?.nom ?? ""}`,
+  date: d.date_demande,
+}));
+
+setDemandesEnCours(formatees);
+
+      } catch (error) {
+        console.error("Erreur de chargement des demandes :", error);
+      }
+    };
+
+    fetchDemandes();
+  }, []);
+
+  // Ajout du numéro formaté et nombre cultures
+  const demandesAvecNumero = demandesEnCours.map((d, index) => ({
+    ...d,
+    numero: `DEM${(index + 1).toString().padStart(3, "0")}`,
+    nbCultures: d.cultures?.length ?? 0,
+  }));
+
+  // Calcul du statut selon resultatsSoumis
+  const demandesFiltrees = demandesAvecNumero.filter((demande) => {
+    let statut = "en_cours";
+    if (demande.resultatsSoumis) {
+      const allValid = Object.values(demande.resultats || {}).every(
+        (r) => r.statut === "validée"
+      );
+      statut = allValid ? "validée" : "rejetée";
+    }
+
+    if (filterStatut === "all") return true;
+    return filterStatut === statut;
+  });
 
   const openFormModal = (demande) => {
     setSelectedDemande(demande);
@@ -62,7 +89,7 @@ const ResultatsInspection = () => {
 
   const handleSubmit = () => {
     const updatedDemandes = demandesEnCours.map((d) =>
-      d.id === selectedDemande.id
+      (d._id ?? d.id) === (selectedDemande._id ?? selectedDemande.id)
         ? {
             ...d,
             resultatsSoumis: true,
@@ -79,46 +106,98 @@ const ResultatsInspection = () => {
   return (
     <DashboardLayout>
       <UserMenu />
-      <h1 className="text-2xl font-bold text-green-900 mt-4 mb-1">Résultats des inspections</h1>
-      <p className="text-sm text-gray-600 mb-6">
+
+      <h1 className="text-2xl font-bold text-green-900 mt-4 mb-1">
+        Résultats des inspections
+      </h1>
+      <p className="text-sm text-gray-600 mb-4">
         Remplissez les résultats ou visualisez les certificats délivrés.
       </p>
 
-      <div className="bg-white rounded shadow p-4 overflow-x-auto">
+      {/* Filtre statut */}
+      <div className="mb-4">
+        <label htmlFor="filterStatut" className="mr-2 font-medium">
+          Filtrer par statut :
+        </label>
+        <select
+          id="filterStatut"
+          value={filterStatut}
+          onChange={(e) => setFilterStatut(e.target.value)}
+          className="border rounded p-1"
+        >
+          <option value="all">Tous</option>
+          <option value="en_cours">En cours</option>
+          <option value="validée">Validée</option>
+          <option value="rejetée">Rejetée</option>
+        </select>
+      </div>
+
+      <div className="bg-white rounded shadow overflow-x-auto">
         <table className="w-full text-sm table-auto">
           <thead className="bg-gray-100 text-left">
             <tr>
-              <th className="p-3">ID Demande</th>
+              <th className="p-3">N° Demande</th>
               <th className="p-3">Exportateur</th>
               <th className="p-3">Date</th>
+              <th className="p-3">Nb cultures</th>
+              <th className="p-3">Statut</th>
               <th className="p-3 text-center">Action</th>
             </tr>
           </thead>
           <tbody>
-            {demandesEnCours.map((demande) => (
-              <tr key={demande.id} className="border-t">
-                <td className="p-3 font-medium">{demande.id}</td>
-                <td className="p-3">{demande.exportateur}</td>
-                <td className="p-3">{new Date(demande.date).toLocaleDateString()}</td>
-                <td className="p-3 text-center">
-                  {demande.resultatsSoumis ? (
-                    <button
-                      className="bg-gray-600 text-white text-xs px-3 py-1 rounded hover:bg-gray-700"
-                      onClick={() => openViewModal(demande)}
-                    >
-                      Voir résultats
-                    </button>
-                  ) : (
-                    <button
-                      className="bg-green-700 text-white text-xs px-3 py-1 rounded hover:bg-green-800"
-                      onClick={() => openFormModal(demande)}
-                    >
-                      Remplir résultats
-                    </button>
-                  )}
+            {demandesFiltrees.length === 0 && (
+              <tr>
+                <td colSpan={6} className="text-center p-4 text-gray-500">
+                  Aucun résultat trouvé
                 </td>
               </tr>
-            ))}
+            )}
+            {demandesFiltrees.map((demande) => {
+              let statut = "en_cours";
+              if (demande.resultatsSoumis) {
+                const allValid = Object.values(demande.resultats || {}).every(
+                  (r) => r.statut === "validée"
+                );
+                statut = allValid ? "validée" : "rejetée";
+              }
+
+              return (
+                <tr key={demande._id ?? demande.id} className="border-t">
+                  <td className="p-3 font-medium">{demande.numero}</td>
+                  <td className="p-3">{demande.exportateur}</td>
+                  <td className="p-3">
+                    {new Date(demande.date).toLocaleDateString()}
+                  </td>
+                  <td className="p-3">{demande.nbCultures}</td>
+                  <td className="p-3">
+                    <span
+                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        statutColors[statut] || "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {statut}
+                    </span>
+                  </td>
+                  <td className="p-3 text-center">
+                    {statut === "validée" || statut === "rejetée" ? (
+                      <button
+                        className="bg-gray-600 text-white text-xs px-3 py-1 rounded hover:bg-gray-700"
+                        onClick={() => openViewModal(demande)}
+                      >
+                        Voir résultats
+                      </button>
+                    ) : (
+                      <button
+                        className="bg-green-700 text-white text-xs px-3 py-1 rounded hover:bg-green-800"
+                        onClick={() => openFormModal(demande)}
+                      >
+                        Remplir résultats
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -128,7 +207,7 @@ const ResultatsInspection = () => {
         <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
             <h2 className="text-lg font-bold text-green-900 mb-4">
-              Résultats – {selectedDemande.id}
+              Résultats – {selectedDemande.numero} {/* affichage numéro */}
             </h2>
             <form
               onSubmit={(e) => {
@@ -137,33 +216,28 @@ const ResultatsInspection = () => {
               }}
               className="space-y-4"
             >
-              {selectedDemande.cultures.map((culture) => (
-                <div
-                  key={culture.id}
-                  className="border border-gray-200 rounded p-3"
+              <div className="border border-gray-200 rounded p-3">
+                <label className="block font-medium mb-1">Résultat global</label>
+                <textarea
+                  placeholder="Résultat de l’inspection"
+                  className="w-full border rounded p-2 mb-2"
+                  value={resultats.resultat || ""}
+                  onChange={(e) => handleChange(null, "resultat", e.target.value)}
+                  required
+                />
+
+                <label className="block font-medium mb-1">Statut</label>
+                <select
+                  className="w-full border rounded p-2"
+                  value={resultats.statut || ""}
+                  onChange={(e) => handleChange(null, "statut", e.target.value)}
+                  required
                 >
-                  <p className="font-medium mb-2">{culture.nom}</p>
-                  <textarea
-                    placeholder="Résultat du test sanitaire"
-                    className="w-full border rounded p-2 mb-2"
-                    onChange={(e) =>
-                      handleChange(culture.id, "resultat", e.target.value)
-                    }
-                    required
-                  />
-                  <select
-                    className="w-full border rounded p-2"
-                    onChange={(e) =>
-                      handleChange(culture.id, "statut", e.target.value)
-                    }
-                    required
-                  >
-                    <option value="">-- Statut --</option>
-                    <option value="validée">Validée</option>
-                    <option value="rejetée">Rejetée</option>
-                  </select>
-                </div>
-              ))}
+                  <option value="">-- Statut --</option>
+                  <option value="validée">Validée</option>
+                  <option value="rejetée">Rejetée</option>
+                </select>
+              </div>
 
               <div>
                 <label className="block font-medium mb-1">Certificat PDF</label>

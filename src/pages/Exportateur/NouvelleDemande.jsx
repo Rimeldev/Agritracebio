@@ -1,21 +1,33 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import UserMenu from "@/components/UserMenu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { createInspectionRequest } from "@/services/inspectionDemande";
+import { getExportateurCultures } from "@/services/exportateurCultureService";
+import { toast } from "react-toastify";
 
 const NouvelleDemande = () => {
   const navigate = useNavigate();
-
-  // Cultures fictives
-  const mockCultures = [
-    { id: "1", nom: "Ananas – Lokossa", statut: "en production" },
-    { id: "2", nom: "Mangue – Bembéréké", statut: "en production" },
-    { id: "3", nom: "Ananas – Porto-Novo", statut: "exportée" },
-    { id: "4", nom: "Mangue – Parakou", statut: "en production" },
-  ];
-
+  const [cultures, setCultures] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedCultures, setSelectedCultures] = useState([]);
+
+  useEffect(() => {
+    const fetchCultures = async () => {
+      try {
+        const data = await getExportateurCultures();
+        // Garder uniquement les cultures "en production"
+        const filtered = (data || []).filter(
+          (c) => c.statut?.toLowerCase() === "en production"
+        );
+        setCultures(filtered);
+      } catch (error) {
+        toast.error("Erreur lors du chargement des cultures.");
+        console.error(error);
+      }
+    };
+    fetchCultures();
+  }, []);
 
   const toggleCulture = (id) => {
     setSelectedCultures((prev) =>
@@ -23,20 +35,32 @@ const NouvelleDemande = () => {
     );
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (selectedCultures.length === 0) {
-      alert("Veuillez sélectionner au moins une culture.");
+      toast.error("Veuillez sélectionner au moins une culture.");
       return;
     }
-    console.log("Soumission avec :", selectedCultures);
-    navigate("/exportateur/mes-demandes");
+
+    try {
+      await createInspectionRequest({
+        culture_ids: selectedCultures,
+        remarques: "Cultures prêtes pour inspection",
+      });
+
+      toast.success("Demande envoyée avec succès !");
+      navigate("/exportateur/mes-demandes");
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        error?.response?.data?.message || "Une erreur est survenue lors de l’envoi de la demande."
+      );
+    }
   };
 
-  const filteredCultures = mockCultures.filter(
-    (c) =>
-      c.nom.toLowerCase().includes(search.toLowerCase()) &&
-      c.statut === "en production"
+  const filteredCultures = cultures.filter((c) =>
+    (c.nom_culture || "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -64,11 +88,11 @@ const NouvelleDemande = () => {
           <table className="w-full table-auto border border-gray-200 bg-white shadow-sm rounded text-sm">
             <thead className="bg-gray-100 text-left">
               <tr>
-                <th className="p-3 border-b">
-                  <span className="sr-only">Sélection</span>
-                </th>
-                <th className="p-3 border-b">Nom de la culture</th>
-                <th className="p-3 border-b">Statut</th>
+                <th className="p-3 border-b"></th>
+                <th className="p-3 border-b">Nom culture</th>
+                <th className="p-3 border-b">Variété</th>
+                <th className="p-3 border-b">Localisation</th>
+                <th className="p-3 border-b">Agriculteur</th>
               </tr>
             </thead>
             <tbody>
@@ -83,17 +107,17 @@ const NouvelleDemande = () => {
                         className="accent-green-600"
                       />
                     </td>
-                    <td className="p-3 border-b">{culture.nom}</td>
-                    <td className="p-3 border-b capitalize">
-                      <span className="text-green-700 bg-green-100 px-2 py-1 rounded-full text-xs">
-                        {culture.statut}
-                      </span>
+                    <td className="p-3 border-b">{culture.nom_culture}</td>
+                    <td className="p-3 border-b">{culture.variete}</td>
+                    <td className="p-3 border-b">{culture.localisation}</td>
+                    <td className="p-3 border-b">
+                      {culture.user?.prenom} {culture.user?.nom}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="3" className="p-4 text-center text-gray-500">
+                  <td colSpan="5" className="p-4 text-center text-gray-500">
                     Aucune culture trouvée.
                   </td>
                 </tr>

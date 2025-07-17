@@ -37,6 +37,11 @@ const Sidebar = ({ userType = "farmer" }) => {
       label: "Résultats inspections",
       icon: <PackageCheck className="h-5 w-5" />, 
     },
+    {
+  to: "/controleur/cultures-exportees",
+  label: "Cultures exportées",
+  icon: <PackageCheck className="h-5 w-5" />,
+},
     ];
   } else if (userType === "exportateur") {
     menuItems = [

@@ -34,7 +34,8 @@ const MyAccount = () => {
         setAddress(res.adresse || '');
         setPhone(res.telephone || '');
         if (res.avatar) {
-          setPreviewUrl("http://127.0.0.1:5000" + res.avatar);
+           const correctedPath = res.avatar.replace("files/avatars", "avatars");
+setPreviewUrl(`http://127.0.0.1:5000/${correctedPath}`);
         }
       } catch (err) {
           toast.error(err?.response?.data?.message || "Erreur lors du chargement du profil.");
@@ -68,7 +69,7 @@ const MyAccount = () => {
       });
 
       toast.success(res.message || "Profil mis à jour !");
-      // navigate("/dashboard"); // à activer si redirection souhaitée
+      navigate("/admin");
     } catch (error) {
       toast.error(error?.response?.data?.message || "Erreur lors de la mise à jour.");
     } finally {

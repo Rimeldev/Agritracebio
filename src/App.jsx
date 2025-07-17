@@ -8,6 +8,9 @@ import Culture from './pages/farmer/Culture';
 import Authorization from './pages/controler/Authorization';
 import ControleurDemandes from './pages/controler/ControleurDemandes';
 import ResultatsInspection from './pages/controler/ResultatsInspection';
+import DetailCultureControleur from './pages/controler/DetailCultureControleur';
+import ControleurCulturesExportees from './pages/controler/ControleurCulturesExportees';
+import ExportateurDashboardView from './pages/controler/ExportateurDashboardView';
 import VerificationPage from './pages/VerificationPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminAccount from './pages/admin/AdminAccount';
@@ -94,6 +97,16 @@ function App() {
             <ResultatsInspection />
           </PrivateRoute>
         } />
+         <Route path="/controleur/cultures-exportees" element={
+          <PrivateRoute>
+            <ControleurCulturesExportees />
+          </PrivateRoute>
+        } />
+        <Route path="/controleur/culture/:id" element={
+          <PrivateRoute>
+            <DetailCultureControleur />
+          </PrivateRoute>
+        } />
 
         <Route path="/exportateur/Dashboard" element={
           <PrivateRoute>
@@ -130,7 +143,11 @@ function App() {
             <ExportateurCertificats />
           </PrivateRoute>
         } />
-        
+         <Route path="/controleur/exportateur/:id/dashboard" element={
+          <PrivateRoute>
+            <ExportateurDashboardView />
+          </PrivateRoute>
+        } />
 <Route path="/produit/:produitId" element={<ConsommateurProduit />} />
       </Routes>
 

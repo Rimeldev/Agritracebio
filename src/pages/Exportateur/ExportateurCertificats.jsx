@@ -1,4 +1,3 @@
-// src/pages/exportateur/ExportateurCertificats.jsx
 import DashboardLayout from "@/components/DashboardLayout";
 import UserMenu from "@/components/UserMenu";
 import { Download } from "lucide-react";
@@ -27,32 +26,28 @@ const ExportateurCertificats = () => {
         </p>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4 overflow-x-auto">
-        <table className="min-w-full text-sm text-left border-separate border-spacing-y-2">
-          <thead>
-            <tr className="text-gray-600">
-              <th className="px-4 py-2 bg-gray-50 rounded-l">N° Demande</th>
-              <th className="px-4 py-2 bg-gray-50">Date de la demande</th>
-              <th className="px-4 py-2 bg-gray-50 rounded-r">Action</th>
+      <div className="overflow-x-auto bg-white rounded shadow ">
+        <table className="w-full table-auto text-sm">
+          <thead className="bg-gray-100 text-center">
+            <tr>
+              <th className="px-6 py-3 rounded-l">N° Demande</th>
+              <th className="px-6 py-3">Date de la demande</th>
+              <th className="px-6 py-3 rounded-r">Action</th>
             </tr>
           </thead>
           <tbody>
             {mockCertificats.map((certif, index) => (
               <tr
                 key={certif.id}
-                className={`bg-white hover:bg-green-50 shadow-sm transition ${
-                  index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                }`}
+                className={`${index % 2 !== 0 ? "bg-gray-50" : "bg-white"} border-t hover:bg-green-50 transition`}
               >
-                <td className="px-4 py-3 font-medium text-gray-800">{certif.id}</td>
-                <td className="px-4 py-3 text-gray-700">
-                  {new Date(certif.date).toLocaleDateString()}
-                </td>
-                <td className="px-4 py-3">
+                <td className="px-6 py-3 font-medium text-gray-800 text-center">{certif.id}</td>
+                <td className="px-6 py-3 text-gray-700 text-center">{new Date(certif.date).toLocaleDateString()}</td>
+                <td className="px-6 py-3 text-center">
                   <a
                     href={certif.certificatUrl}
                     download
-                    className="inline-flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white px-3 py-1.5 rounded text-xs"
+                    className="inline-flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white px-3 py-1.5 rounded text-xs justify-center"
                   >
                     <Download size={14} />
                     Télécharger

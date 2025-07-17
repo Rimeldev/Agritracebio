@@ -1,4 +1,3 @@
-// src/pages/exportateur/ExportateurValidation.jsx
 import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import UserMenu from "@/components/UserMenu";
@@ -44,34 +43,32 @@ const ExportateurValidation = () => {
           Validation finale des cultures
         </h1>
         <p className="text-sm text-gray-600">
-          Remplissez les informations finales pour générer les certificats d’exportation.
+          Remplissez les informations finales pour obtenir les certificats d’exportation.
         </p>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4 overflow-x-auto">
-        <table className="min-w-full text-sm border-separate border-spacing-y-2">
-          <thead>
-            <tr className="text-left text-gray-600">
-              <th className="px-4 py-2 bg-gray-50 rounded-l">Culture</th>
-              <th className="px-4 py-2 bg-gray-50">Producteur</th>
-              <th className="px-4 py-2 bg-gray-50">Date de validation</th>
-              <th className="px-4 py-2 bg-gray-50 rounded-r text-center">Action</th>
+      <div className="overflow-x-auto bg-white rounded shadow ">
+        <table className="w-full table-auto text-sm">
+          <thead className="bg-gray-100 text-left">
+            <tr>
+              <th className="p-3 rounded-l">Culture</th>
+              <th className="p-3">Producteur</th>
+              <th className="p-3">Date de validation</th>
+              <th className="p-3 rounded-r text-center">Action</th>
             </tr>
           </thead>
           <tbody>
             {mockCultures.map((culture, index) => (
               <tr
                 key={culture.id}
-                className={`bg-white hover:bg-green-50 transition shadow-sm ${
-                  index % 2 !== 0 ? "bg-gray-50" : ""
-                }`}
+                className={`${index % 2 !== 0 ? "bg-gray-50" : "bg-white"} border-t hover:bg-green-50 transition`}
               >
-                <td className="px-4 py-3 font-medium text-gray-800">{culture.nom}</td>
-                <td className="px-4 py-3 text-gray-700">{culture.producteur}</td>
-                <td className="px-4 py-3 text-gray-700">
+                <td className="p-3 font-medium text-gray-800">{culture.nom}</td>
+                <td className="p-3 text-gray-700">{culture.producteur}</td>
+                <td className="p-3 text-gray-700">
                   {new Date(culture.dateValidation).toLocaleDateString()}
                 </td>
-                <td className="px-4 py-3 text-center">
+                <td className="p-3 text-center">
                   <button
                     onClick={() => openModal(culture)}
                     className="inline-flex items-center gap-1 text-white bg-green-700 hover:bg-green-800 px-3 py-1.5 rounded text-xs"

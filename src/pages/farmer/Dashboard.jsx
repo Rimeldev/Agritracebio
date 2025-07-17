@@ -51,7 +51,8 @@ const Dashboard = () => {
         const result = await getCultureDashboard(selectedCulture, {
           page: 1,
           perPage: 10,
-          
+         //startDate: start,
+        //endDate: end, 
         });
 
         setCultureInfo(result.culture);

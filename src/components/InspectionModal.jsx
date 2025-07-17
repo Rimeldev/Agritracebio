@@ -1,21 +1,33 @@
 import { useState } from "react";
+import { toast } from "react-toastify";
 
-const InspectionModal = ({ isOpen, onClose, onSend, email }) => {
+const InspectionModal = ({ isOpen, onClose, email, onSend ,demandeId }) => {
   const [date, setDate] = useState("");
   const [message, setMessage] = useState(
     "Bonjour, nous souhaitons planifier l’inspection de vos cultures pour le..."
   );
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!date) {
-      alert("Veuillez sélectionner une date.");
-      return;
-    }
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    onSend({ email, date, message });
-    onClose();
-  };
+  if (!date) {
+    toast.error("Veuillez sélectionner une date.");
+    return;
+  }
+
+  setLoading(true);
+  try {
+    await onSend({ email, date, message, demandeId }) // <- n'oublie pas demandeId ici
+
+    // Pas besoin de fermer ici, c'est déjà fait dans handleSendEmail côté parent
+  } catch {
+    toast.error("Erreur lors de l'envoi de l'email.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   if (!isOpen) return null;
 
@@ -75,9 +87,10 @@ const InspectionModal = ({ isOpen, onClose, onSend, email }) => {
             </button>
             <button
               type="submit"
-              className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded"
+              className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded disabled:opacity-50"
+              disabled={loading}
             >
-              Envoyer l’email
+              {loading ? "Envoi..." : "Envoyer l’email"}
             </button>
           </div>
         </form>

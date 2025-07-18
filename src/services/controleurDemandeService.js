@@ -15,18 +15,14 @@ export const getAllDemandesInspection = async () => {
 
   return res.data.data;
 };
-// Récupère les cultures d’un exportateur spécifique (pour le contrôleur)
+// services/controleurDemandeService.js
+
 export const getCulturesByExportateurId = async (exportateurId) => {
-  const response = await fetch(`/api/controleur/exportateurs/${exportateurId}/cultures`);
-  if (!response.ok) {
-    throw new Error("Erreur lors de la récupération des cultures de l'exportateur");
-  }
+  if (!exportateurId) throw new Error("ID exportateur manquant");
 
-  const data = await response.json();
+  const response = await axios.get(
+    `http://127.0.0.1:5000/api/controleur/exportateur/${exportateurId}`
+  );
 
-  // 🔁 Exemple de format attendu
-  return {
-    nom: `${data.exportateur.prenom} ${data.exportateur.nom}`,
-    cultures: data.cultures
-  };
+  return response.data; // { nom: "...", cultures: [...] }
 };

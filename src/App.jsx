@@ -43,7 +43,8 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/VerificationPage" element={<VerificationPage />} />
-        <Route path="/trace" element={<Trace />} />
+        <Route path="/trace/:culture_id" element={<Trace />} />
+
 
         {/* Routes protégées */}
         <Route path="/farmer/Dashboard" element={
@@ -143,7 +144,7 @@ function App() {
             <ExportateurCertificats />
           </PrivateRoute>
         } />
-         <Route path="/controleur/exportateur/:id/dashboard" element={
+         <Route path="/controleur/exportateur/:exportateur_id" element={
           <PrivateRoute>
             <ExportateurDashboardView />
           </PrivateRoute>

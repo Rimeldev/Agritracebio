@@ -75,14 +75,13 @@ const ExportateurDemandes = () => {
     return statutOk && searchOk;
   });
 
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <UserMenu farmerName="Exportateur" />
-        <p className="text-center mt-10">Chargement des demandes...</p>
-      </DashboardLayout>
-    );
-  }
+ if (loading) {
+  return (
+    <DashboardLayout>
+      <UserMenu farmerName="Exportateur" />
+    </DashboardLayout>
+  );
+}
 
   return (
     <DashboardLayout>

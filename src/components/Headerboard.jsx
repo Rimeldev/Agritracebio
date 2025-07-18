@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { CalendarDays, Sprout } from "lucide-react"; // Icônes modernes (Lucide)
+import { useParams } from "react-router-dom";
 
 const Headerboard = ({
   activeCultures = [],
@@ -10,10 +11,11 @@ const Headerboard = ({
   selectedCulture,
 }) => {
   const location = useLocation();
+    const { exportateur_id } = useParams();
 
   return (
     <div className="mb-6">
-      {["/farmer/Dashboard", "/exportateur/Dashboard"].includes(location.pathname) && (
+      {["/farmer/Dashboard", "/exportateur/Dashboard",`/controleur/exportateur/${exportateur_id}`].includes(location.pathname) && (
         <div className="flex flex-wrap items-center gap-4 mt-4">
           
           {/* Sélecteur de culture */}

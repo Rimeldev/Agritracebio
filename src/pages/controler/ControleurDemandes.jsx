@@ -95,21 +95,25 @@ const ControleurDemandes = () => {
             </tr>
           </thead>
           <tbody>
+            
             {demandes.map((demande) => (
               
               <tr key={demande.original.id} className="border-t">
                 
                 <td className="p-3">{demande.numero}</td>
+                
                 <td className="p-3">
                   {new Date(demande.date).toLocaleDateString()}
                 </td>
+                
                 <td className="p-3">
                   <a
-                    href={`/controleur/exportateur/${demande.original.exportateur_id._id}/dashboard`}
+                    href={`/controleur/exportateur/${demande.original.exportateur_id.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-700 underline hover:text-blue-900"
                   >
+              
                     {demande.exportateur}
                   </a>
                 </td>

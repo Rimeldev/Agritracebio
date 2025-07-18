@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import UserMenu from "@/components/UserMenu";
 import { getAllDemandesInspection } from "@/services/controleurDemandeService";
+import { envoyerResultatInspection } from "@/services/inspectionResultService";
+import { toast } from "react-toastify";
 
 const ResultatsInspection = () => {
   const [selectedDemande, setSelectedDemande] = useState(null);
@@ -87,13 +89,28 @@ setDemandesEnCours(formatees);
     }));
   };
 
-  const handleSubmit = () => {
+ 
+
+const handleSubmit = async () => {
+  try {
+    const payload = {
+      demande_id: selectedDemande._id ?? selectedDemande.id,
+      resultats: resultats,
+      statut: resultats.null?.statut,
+      document: certificatFile,
+    };
+
+    const response = await envoyerResultatInspection(payload);
+
+    // Optionnel : affichage ou mise à jour de l'UI
+    console.log("Réponse API :", response);
+
     const updatedDemandes = demandesEnCours.map((d) =>
-      (d._id ?? d.id) === (selectedDemande._id ?? selectedDemande.id)
+      (d._id ?? d.id) === payload.demande_id
         ? {
             ...d,
             resultatsSoumis: true,
-            certificat: URL.createObjectURL(certificatFile),
+            certificat: response.chemin_document || null, // si renvoyé
             resultats: resultats,
           }
         : d
@@ -101,7 +118,12 @@ setDemandesEnCours(formatees);
 
     setDemandesEnCours(updatedDemandes);
     setShowFormModal(false);
-  };
+toast.success("Résultats soumis avec succès !");
+  } catch (error) {
+    console.error("Erreur lors de l’envoi des résultats :", error);
+    toast.error("Échec de l’envoi. Veuillez réessayer.");
+  }
+};
 
   return (
     <DashboardLayout>
@@ -221,7 +243,7 @@ setDemandesEnCours(formatees);
                 <textarea
                   placeholder="Résultat de l’inspection"
                   className="w-full border rounded p-2 mb-2"
-                  value={resultats.resultat || ""}
+                  value={resultats.null?.resultat || ""}
                   onChange={(e) => handleChange(null, "resultat", e.target.value)}
                   required
                 />
@@ -229,7 +251,7 @@ setDemandesEnCours(formatees);
                 <label className="block font-medium mb-1">Statut</label>
                 <select
                   className="w-full border rounded p-2"
-                  value={resultats.statut || ""}
+                  value={resultats.null?.statut || ""}
                   onChange={(e) => handleChange(null, "statut", e.target.value)}
                   required
                 >
@@ -271,61 +293,73 @@ setDemandesEnCours(formatees);
       )}
 
       {/* Modal Voir résultats */}
-      {showViewModal && selectedDemande && (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-xl">
-            <h2 className="text-lg font-bold text-green-900 mb-4">
-              Résultats soumis – {selectedDemande.id}
-            </h2>
-            <div className="space-y-4">
-              {selectedDemande.cultures.map((culture) => {
-                const info = selectedDemande.resultats[culture.id];
-                return (
-                  <div key={culture.id} className="border rounded p-3">
-                    <p className="font-semibold">{culture.nom}</p>
-                    <p className="text-sm mt-2 text-gray-700">
-                      <span className="font-medium">Résultat:</span> {info?.resultat}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-medium">Statut:</span>{" "}
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          info?.statut === "validée"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {info?.statut}
-                      </span>
-                    </p>
-                  </div>
-                );
-              })}
+     {/* Modal Voir résultats */}
+{showViewModal && selectedDemande && (
+  <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-xl">
+      <h2 className="text-lg font-bold text-green-900 mb-4">
+        Résultats soumis – {selectedDemande.numero}
+      </h2>
 
-              {selectedDemande.certificat && (
-                <div className="text-right">
-                  <a
-                    href={selectedDemande.certificat}
-                    download={`certificat-${selectedDemande.id}.pdf`}
-                    className="text-sm text-blue-600 underline hover:text-blue-800"
-                  >
-                    Télécharger le certificat PDF
-                  </a>
-                </div>
-              )}
+      {/* Statut global calculé */}
+      {(() => {
+        let statut = "en_cours";
+        if (selectedDemande.resultatsSoumis) {
+          const allValid = Object.values(selectedDemande.resultats || {}).every(
+            (r) => r.statut === "validée"
+          );
+          statut = allValid ? "validée" : "rejetée";
+        }
+        return (
+          <p>
+            <strong>Statut :</strong>{" "}
+            <span
+              className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                statut === "validée"
+                  ? "bg-green-100 text-green-700"
+                  : statut === "rejetée"
+                  ? "bg-red-100 text-red-700"
+                  : "bg-yellow-100 text-yellow-700"
+              }`}
+            >
+              {statut}
+            </span>
+          </p>
+        );
+      })()}
 
-              <div className="text-right mt-4">
-                <button
-                  onClick={() => setShowViewModal(false)}
-                  className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
-                >
-                  Fermer
-                </button>
-              </div>
-            </div>
-          </div>
+      {/* Résultat global */}
+      <div className="mt-4">
+        <p className="font-semibold">Résultat global :</p>
+        <p className="whitespace-pre-wrap">{selectedDemande.resultats?.null?.resultat || "Aucun résultat"}</p>
+      </div>
+
+      {/* Lien certificat */}
+      {selectedDemande.certificat && (
+        <div className="mt-4 text-right">
+          <a
+            href={selectedDemande.certificat}
+            download={`certificat-${selectedDemande.numero}.pdf`}
+            className="text-sm text-blue-600 underline hover:text-blue-800"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Télécharger le certificat PDF
+          </a>
         </div>
       )}
+
+      <div className="text-right mt-6">
+        <button
+          onClick={() => setShowViewModal(false)}
+          className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+        >
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </DashboardLayout>
   );
 };

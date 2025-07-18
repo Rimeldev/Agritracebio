@@ -1,124 +1,158 @@
-import React from "react";
-import { CheckCircle, ThermometerSun, Truck, MapPin, BadgeCheck, Calendar } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import EnvironmentalChart from "@/components/EnvironmentalChart";
 
-const AnanasDetailsPage = () => {
+import axios from "axios";
+import {
+  BadgeCheck,
+  Truck,
+  ThermometerSun,
+  CheckCircle,
+  FileText,
+} from "lucide-react";
+import logo from "../assets/logo.png";
+
+const TracePage = () => {
+  const { culture_id } = useParams();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const formatDate = (str) =>
+    str ? new Date(str).toLocaleDateString("fr-FR") : "N/A";
+
+  useEffect(() => {
+    const fetchCulture = async () => {
+      try {
+        const response = await axios.get(
+          `http://127.0.0.1:5000/api/controleur/culture/${culture_id}/details-complets`
+        );
+        setData(response.data.data);
+      } catch (error) {
+        console.error("Erreur de chargement des données:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCulture();
+  }, [culture_id]);
+
+  if (loading) return null;
+  if (!data) return <p className="p-6 text-center">Aucune donnée trouvée.</p>;
+
+  const { culture, utilisateur, inspections, transports } = data;
+
+  const inspection = inspections[0];
+  const transport = transports[0];
+
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 md:px-12 lg:px-32 font-sans">
-      <div className="text-center mb-8">
-        <span className="text-xs bg-gray-200 px-3 py-1 rounded-full tracking-wide font-medium text-gray-700">
-          LOT: 2025-A12B34
-        </span>
-        <h1 className="text-3xl md:text-4xl font-bold text-green-900 mt-2">Ananas Pain de Sucre</h1>
-        <p className="text-gray-600 text-lg">Pain de Sucre</p>
-      </div>
+    <div className="min-h-screen bg-white text-[#1a3b1f] font-sans">
+      {/* HEADER */}
+      <header className="bg-[#284411] text-white px-4 py-6 flex flex-col items-center text-center">
+        <img src={logo} alt="Logo" className="h-16 md:h-20 mb-2" />
+        <h1 className="text-2xl md:text-4xl font-bold">{culture.nom_culture}</h1>
+        <p className="mt-1 text-sm md:text-base">
+          Producteur : {utilisateur?.prenom} {utilisateur?.nom}
+        </p>
+        <p className="text-sm md:text-base">Localisation : {culture.localisation}</p>
+      </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Informations Producteur */}
-        <div className="bg-white rounded-xl shadow p-6 space-y-3">
-          <h2 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
-            <BadgeCheck size={18} className="text-green-700" /> Informations Producteur
-          </h2>
-          <div>
-            <p className="text-sm font-medium text-gray-600">Producteur</p>
-            <p className="text-base font-semibold">Luc Byklt ZAVKON</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-600">Localisation</p>
-            <p className="text-base text-gray-800">Tori-Bossito, Atlantique, Bénin</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-600">Certifications</p>
-            <div className="flex gap-2 mt-1 flex-wrap">
-              <span className="bg-yellow-200 text-yellow-900 px-3 py-1 rounded-full text-xs font-semibold">
-                Agriculture Biologique
-              </span>
-              <span className="bg-yellow-200 text-yellow-900 px-3 py-1 rounded-full text-xs font-semibold">
-                Commerce Équitable
-              </span>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Date de déclaration</p>
-              <p className="text-gray-800">15/07/2024</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">Date de récolte</p>
-              <p className="text-gray-800">12/04/2025</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">Surface cultivée</p>
-              <p className="text-gray-800">2.5 hectares</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">Méthode</p>
-              <p className="text-gray-800">Agriculture biologique</p>
-            </div>
-          </div>
-        </div>
+      {/* MAIN */}
+      <main className="px-4 md:px-8 lg:px-32 py-10 space-y-10">
+        {/* SECTION - CULTURE */}
+        <Section
+          title="Informations sur la culture"
+          icon={<BadgeCheck size={20} className="text-green-700" />}
+        >
+          <InfoGrid
+            data={{
+              "Type": culture.nom_culture,
+              "Statut": culture.statut,
+              "Variété": culture.variete || "N/A",
+              "Date de déclaration": formatDate(culture.date_declaration),
+            }}
+          />
+        </Section>
 
-        {/* Conditions de Transport */}
-        <div className="bg-white rounded-xl shadow p-6 space-y-3">
-          <h2 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
-            <Truck size={18} className="text-green-700" /> Conditions de Transport
-          </h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Date de départ</p>
-              <p className="text-gray-800">13/04/2025</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">Date d'arrivée</p>
-              <p className="text-gray-800">14/04/2025</p>
-            </div>
-            <div className="col-span-2">
-              <p className="text-sm font-medium text-gray-600">Véhicule</p>
-              <p className="text-gray-800">Camion frigorifique TG-456-AB</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">Conducteur</p>
-              <p className="text-gray-800">Jean HOUSSOU</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">Itinéraire</p>
-              <p className="text-gray-800">Tori-Bossito → Cotonou → Port Autonome</p>
-            </div>
-            <div className="col-span-2 flex items-center gap-2">
-              <ThermometerSun className="text-blue-600" size={16} />
-              <span className="text-sm text-gray-700">Température : 12-15°C</span>
-              <span className="ml-auto bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
-                Conditions : Conforme
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+        {/* SECTION - ENVIRONNEMENT */}
+         <Section>
+       {data?.donnees_environnementales && (
+  <EnvironmentalChart donneesEnvironnementales={data.donnees_environnementales} />
+)}
+</Section>
 
-      {/* Résultats des Inspections */}
-      <div className="mt-8 bg-white rounded-xl shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-          <CheckCircle size={18} className="text-green-700" /> Résultats des Inspections
-        </h2>
-        <div className="border border-gray-200 rounded p-4">
-          <div className="flex justify-between items-center mb-2">
-            <p className="font-medium text-gray-800">Inspection initiale</p>
-            <span className="text-sm text-green-800 font-semibold bg-green-100 px-3 py-1 rounded-full">
-              Conforme
-            </span>
-          </div>
-          <p className="text-sm text-gray-700 mb-2">
-            Inspecteur: Dr. Marie KOUDJO
-          </p>
-          <p className="text-sm text-gray-700">
-            Respect des normes phytosanitaires, aucun pesticide détecté
-          </p>
-          <div className="text-right text-sm text-gray-500 mt-2">
-            <Calendar size={14} className="inline-block mr-1" /> 20/07/2024
-          </div>
-        </div>
-      </div>
+        {/* SECTION - TRANSPORT */}
+        {transport && (
+          <Section
+            title="Informations de transport"
+            icon={<Truck size={20} className="text-green-700" />}
+          >
+            <InfoGrid
+              data={{
+                "Transporteur": transport.transporteur_name,
+                "Chauffeur": transport.vehicule?.chauffeur,
+                "Type véhicule": transport.vehicule?.type,
+                "Immatriculation": transport.vehicule?.immatriculation,
+                "Date départ": formatDate(transport.date_depart),
+                "Date arrivée": formatDate(transport.date_arrivee),
+              }}
+            />
+          </Section>
+        )}
+
+        {/* SECTION - INSPECTION */}
+        {inspection && (
+          <Section
+            title="Résultat de l’inspection"
+            icon={<CheckCircle size={20} className="text-green-700" />}
+          >
+            <div className="grid md:grid-cols-2 gap-4 text-sm">
+              <p><strong>Type :</strong> {inspection.type}</p>
+              <p><strong>Date :</strong> {formatDate(inspection.date_inspection)}</p>
+              <p><strong>Statut :</strong> <span className="text-green-700 font-medium">{inspection.statut}</span></p>
+              <p><strong>Commentaire :</strong> {inspection.message}</p>
+              {inspection.certificat && (
+                <a
+                  href={inspection.certificat}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-green-700 hover:text-green-900 underline"
+                >
+                  <FileText size={16} />
+                  Voir le certificat
+                </a>
+              )}
+            </div>
+          </Section>
+        )}
+      </main>
+
+      {/* FOOTER */}
+      <footer className="bg-[#284411] text-white text-center text-xs py-6 mt-10">
+        © 2025 AgriTraceBio Bénin — Tous droits réservés.
+      </footer>
     </div>
   );
 };
 
-export default AnanasDetailsPage;
+const Section = ({ title, icon, children }) => (
+  <section className="bg-white border border-green-100 rounded-2xl shadow p-6">
+    <h2 className="text-lg md:text-xl font-semibold flex items-center gap-2 mb-4">
+      {icon} {title}
+    </h2>
+    {children}
+  </section>
+);
+
+const InfoGrid = ({ data }) => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+    {Object.entries(data).map(([label, value]) => (
+      <p key={label}>
+        <strong>{label} :</strong> {value}
+      </p>
+    ))}
+  </div>
+);
+
+export default TracePage;

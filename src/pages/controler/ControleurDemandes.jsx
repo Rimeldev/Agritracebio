@@ -94,59 +94,62 @@ const ControleurDemandes = () => {
               <th className="p-3 text-center">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            
-            {demandes.map((demande) => (
-              
-              <tr key={demande.original.id} className="border-t">
-                
-                <td className="p-3">{demande.numero}</td>
-                
-                <td className="p-3">
-                  {new Date(demande.date).toLocaleDateString()}
-                </td>
-                
-                <td className="p-3">
-                  <a
-                    href={`/controleur/exportateur/${demande.original.exportateur_id.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-700 underline hover:text-blue-900"
-                  >
-              
-                    {demande.exportateur}
-                  </a>
-                </td>
-                <td className="p-3">{demande.cultures}</td>
-                <td className="p-3">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      statutColors[demande.statut] || "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {demande.statut.replace("_", " ")}
-                  </span>
-                </td>
-                <td className="p-3 text-center space-x-2">
-                  <button
-                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs px-3 py-1 rounded"
-                    onClick={() => {
-                      setSelectedDemande(demande.original);
-                      setShowDetailModal(true);
-                    }}
-                  >
-                    Voir détails
-                  </button>
-                  <button
-                    onClick={() => openModal(demande)}
-                    className="bg-green-700 hover:bg-green-800 text-white text-xs px-3 py-1 rounded"
-                  >
-                    Programmer
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+        <tbody>
+  {demandes.length === 0 ? (
+    <tr>
+      <td colSpan="6" className="text-center py-6 text-gray-500">
+        Aucune demande d’inspection en attente pour le moment.
+      </td>
+    </tr>
+  ) : (
+    demandes.map((demande) => (
+      <tr key={demande.original.id} className="border-t">
+        <td className="p-3">{demande.numero}</td>
+        <td className="p-3">
+          {new Date(demande.date).toLocaleDateString()}
+        </td>
+        <td className="p-3">
+          <a
+            href={`/controleur/exportateur/${demande.original.exportateur_id.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-700 underline hover:text-blue-900"
+          >
+            {demande.exportateur}
+          </a>
+        </td>
+        <td className="p-3">{demande.cultures}</td>
+        <td className="p-3">
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium ${
+              statutColors[demande.statut] || "bg-gray-100 text-gray-700"
+            }`}
+          >
+            {demande.statut.replace("_", " ")}
+          </span>
+        </td>
+        <td className="p-3 text-center space-x-2">
+          <button
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs px-3 py-1 rounded"
+            onClick={() => {
+              setSelectedDemande(demande.original);
+              setShowDetailModal(true);
+            }}
+          >
+            Voir détails
+          </button>
+          <button
+            onClick={() => openModal(demande)}
+            className="bg-green-700 hover:bg-green-800 text-white text-xs px-3 py-1 rounded"
+          >
+            Programmer
+          </button>
+        </td>
+      </tr>
+    ))
+  )}
+</tbody>
+
         </table>
       </div>
 

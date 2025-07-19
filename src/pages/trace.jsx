@@ -68,7 +68,7 @@ const TracePage = () => {
           <InfoGrid
             data={{
               "Type": culture.nom_culture,
-              "Statut": culture.statut,
+              "Statut": "Exporté",
               "Variété": culture.variete || "N/A",
               "Date de déclaration": formatDate(culture.date_declaration),
             }}
@@ -88,44 +88,52 @@ const TracePage = () => {
             title="Informations de transport"
             icon={<Truck size={20} className="text-green-700" />}
           >
-            <InfoGrid
-              data={{
-                "Transporteur": transport.transporteur_name,
-                "Chauffeur": transport.vehicule?.chauffeur,
-                "Type véhicule": transport.vehicule?.type,
-                "Immatriculation": transport.vehicule?.immatriculation,
-                "Date départ": formatDate(transport.date_depart),
-                "Date arrivée": formatDate(transport.date_arrivee),
-              }}
-            />
+           <InfoGrid
+  data={{
+    "Chauffeur": transport.chauffeur,
+    "Immatriculation": transport.immatriculation,
+    "Lieu de départ": transport.lieu_depart,
+    "Lieu d’arrivée": transport.lieu_arrivee,
+    "Date": formatDate(transport.created_at),
+  }}
+/>
+
           </Section>
         )}
 
         {/* SECTION - INSPECTION */}
         {inspection && (
-          <Section
-            title="Résultat de l’inspection"
-            icon={<CheckCircle size={20} className="text-green-700" />}
-          >
-            <div className="grid md:grid-cols-2 gap-4 text-sm">
-              <p><strong>Type :</strong> {inspection.type}</p>
-              <p><strong>Date :</strong> {formatDate(inspection.date_inspection)}</p>
-              <p><strong>Statut :</strong> <span className="text-green-700 font-medium">{inspection.statut}</span></p>
-              <p><strong>Commentaire :</strong> {inspection.message}</p>
-              {inspection.certificat && (
-                <a
-                  href={inspection.certificat}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-green-700 hover:text-green-900 underline"
-                >
-                  <FileText size={16} />
-                  Voir le certificat
-                </a>
-              )}
-            </div>
-          </Section>
-        )}
+  <Section
+    title="Résultat de l’inspection"
+    icon={<CheckCircle size={20} className="text-green-700" />}
+  >
+    <div className="grid md:grid-cols-2 gap-4 text-sm">
+      {(() => {
+        const parsed = JSON.parse(inspection.resultats);
+        const info = parsed?.null || {};
+        return (
+          <>
+            <p><strong>Statut :</strong> <span className="text-green-700 font-medium">{info.statut || "N/A"}</span></p>
+            <p><strong>Commentaire :</strong> {info.resultat || "N/A"}</p>
+          </>
+        );
+      })()}
+
+      {inspection.document && (
+        <a
+          href={`http://127.0.0.1:5000/${inspection.document.replace(/\\/g, '/')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 text-green-700 hover:text-green-900 underline"
+        >
+          <FileText size={16} />
+          Voir le document PDF
+        </a>
+      )}
+    </div>
+  </Section>
+)}
+
       </main>
 
       {/* FOOTER */}

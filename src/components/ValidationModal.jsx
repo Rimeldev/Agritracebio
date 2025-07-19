@@ -1,170 +1,166 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { Dialog } from "@headlessui/react";
+import { CheckCircle } from "lucide-react";
 
-const ValidationModal = ({ culture, isOpen, onClose, onSubmit }) => {
+const ValidationModal = ({ culture, isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
-    date_recolte: "",
-    destination: "",
-    immatriculation: "",
-    chauffeur: "",
     lieu_depart: "",
     lieu_arrivee: "",
-    photo: null,
+    immatriculation: "",
+    chauffeur: "",
+    images_camion: null,
   });
+
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (culture) {
+      setFormData((prev) => ({
+        ...prev,
+        lieu_depart: culture.lieu_stockage || "",
+        lieu_arrivee: culture.lieu_vente || "",
+      }));
+    }
+  }, [culture]);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: files ? files[0] : value,
-    }));
+    if (files) {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: files[0],
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(culture.id, formData);
-    onClose();
-  };
 
-  if (!isOpen) return null;
+    const data = new FormData();
+    data.append("culture_id", culture.id);
+    data.append("lieu_depart", formData.lieu_depart);
+    data.append("lieu_arrivee", formData.lieu_arrivee);
+    data.append("immatriculation", formData.immatriculation);
+    data.append("chauffeur", formData.chauffeur);
+    if (formData.images_camion) {
+      data.append("images_camion", formData.images_camion);
+    }
+
+    const token = localStorage.getItem("token");
+    setLoading(true);
+
+    try {
+      await axios.post("http://localhost:5000/api/exportateur/transports", data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      toast.success("Transport enregistré avec succès !");
+      onClose();
+      onSuccess?.();
+    } catch (error) {
+      console.error("Erreur lors de l’envoi :", error);
+      if (error.response?.status === 401) {
+        toast.error("Session expirée. Veuillez vous reconnecter.");
+      } else {
+        toast.error("Erreur lors de l'enregistrement du transport.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-brightness-90 flex justify-center items-center">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl relative">
-        {/* Bouton de fermeture */}
-        <button
-          className="absolute top-3 right-4 text-gray-400 hover:text-red-600 text-xl font-bold"
-          onClick={onClose}
-        >
-          ×
-        </button>
-
-        {/* Titre */}
-        <h2 className="text-lg font-semibold text-green-900 mb-1">
-          Validation finale – {culture.nom}
-        </h2>
-        <p className="text-sm text-gray-600 mb-4">
-          Remplissez les informations finales pour générer le certificat
-        </p>
-
-        {/* Formulaire */}
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
+      <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+      <div className="fixed inset-0 flex items-center justify-center p-4">
+        <Dialog.Panel className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+          <div className="flex justify-center mb-4">
+            <CheckCircle className="text-green-500 w-12 h-12" />
+          </div>
+          <Dialog.Title className="text-lg font-medium text-center mb-4">
+            Détails du Transport
+          </Dialog.Title>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date de récolte
-              </label>
-              <input
-                type="date"
-                name="date_recolte"
-                className="border p-2 rounded w-full"
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Destination
-              </label>
-              <input
-                type="text"
-                name="destination"
-                placeholder="Pays/ville de destination"
-                className="border p-2 rounded w-full"
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Immatriculation véhicule
-              </label>
-              <input
-                type="text"
-                name="immatriculation"
-                placeholder="Ex: AB-1234-CD"
-                className="border p-2 rounded w-full"
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Chauffeur
-              </label>
-              <input
-                type="text"
-                name="chauffeur"
-                placeholder="Nom du chauffeur"
-                className="border p-2 rounded w-full"
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Lieu de départ
-              </label>
+              <label className="block text-sm font-medium text-gray-700">Lieu de départ</label>
               <input
                 type="text"
                 name="lieu_depart"
-                placeholder="Adresse de départ"
-                className="border p-2 rounded w-full"
+                value={formData.lieu_depart}
                 onChange={handleChange}
                 required
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Lieu d’arrivée
-              </label>
+              <label className="block text-sm font-medium text-gray-700">Lieu d’arrivée</label>
               <input
                 type="text"
                 name="lieu_arrivee"
-                placeholder="Adresse d’arrivée"
-                className="border p-2 rounded w-full"
+                value={formData.lieu_arrivee}
                 onChange={handleChange}
                 required
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
               />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Photo du contenu
-            </label>
-            <input
-              type="file"
-              name="photo"
-              className="border p-2 rounded w-full"
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          {/* Boutons */}
-          <div className="flex justify-end gap-3 mt-4">
-            <button
-              type="button"
-              className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-              onClick={onClose}
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 rounded bg-green-700 text-white hover:bg-green-800"
-            >
-              Valider la culture
-            </button>
-          </div>
-        </form>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Immatriculation</label>
+              <input
+                type="text"
+                name="immatriculation"
+                value={formData.immatriculation}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Chauffeur</label>
+              <input
+                type="text"
+                name="chauffeur"
+                value={formData.chauffeur}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Image du camion</label>
+              <input
+                type="file"
+                name="images_camion"
+                accept="image/*"
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full"
+              />
+            </div>
+            <div className="mt-6 text-center">
+              <button
+                type="submit"
+                disabled={loading}
+                className={`bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded ${
+                  loading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {loading ? "Enregistrement..." : "Valider"}
+              </button>
+            </div>
+          </form>
+        </Dialog.Panel>
       </div>
-    </div>
+    </Dialog>
   );
 };
 

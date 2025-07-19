@@ -1,44 +1,76 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import DashboardLayout from "@/components/DashboardLayout";
 import UserMenu from "@/components/UserMenu";
 import ValidationModal from "@/components/ValidationModal";
 import { CheckCircle } from "lucide-react";
+import QRCode from "qrcode";
+import { toast } from "react-toastify";
 
+
+const handleQrDownload = async (culture) => {
+  const traceUrl = `${window.location.origin}/trace/${culture.id}`;
+  try {
+    const qrDataUrl = await QRCode.toDataURL(traceUrl);
+    const link = document.createElement("a");
+    link.href = qrDataUrl;
+    link.download = `qr-code-culture-${culture.id}.png`;
+    link.click();
+  } catch (err) {
+    console.error("Erreur QR:", err);
+    toast.error("Erreur génération du code QR.");
+  }
+};
 const ExportateurValidation = () => {
+  const [cultures, setCultures] = useState([]);
   const [selectedCulture, setSelectedCulture] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  const mockCultures = [
-    {
-      id: "1",
-      nom: "Ananas Cayenne – Lokossa",
-      producteur: "Koffi Dossou",
-      dateValidation: "2025-07-12",
-    },
-    {
-      id: "2",
-      nom: "Mangue Kent – Bembéréké",
-      producteur: "Sani Alphonse",
-      dateValidation: "2025-07-10",
-    },
-  ];
+  const fetchCulturesValidees = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("Token manquant.");
+        return;
+      }
 
-  const openModal = (culture) => {
-    setSelectedCulture(culture);
-    setShowModal(true);
+      const res = await axios.get(
+        "http://127.0.0.1:5000/api/exportateur/cultures/inspection-validee",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setCultures(res.data.data);
+    } catch (error) {
+      console.error("Erreur lors du chargement des cultures :", error);
+    }
   };
 
-  const handleSubmitFinalValidation = (cultureId, formData) => {
-    console.log("✅ Données envoyées pour la culture ID :", cultureId);
-    console.log(formData);
-    setShowModal(false);
-  };
+  useEffect(() => {
+    fetchCulturesValidees();
+  }, []);
+
+ const openModal = (culture) => {
+  setSelectedCulture(culture);
+  setShowModal(true);
+};
+
+
+
+const handleSuccess = () => {
+  fetchCulturesValidees();     // recharge les données
+  setShowModal(false);         // ferme la modale après validation
+};
+
 
   return (
     <DashboardLayout>
       <UserMenu farmerName="Exportateur" />
 
-      <div className="mt-4 mb-6">
+      <div className="mt-4 mb-6 mx-auto">
         <h1 className="text-2xl font-bold text-green-900 mb-1">
           Validation finale des cultures
         </h1>
@@ -47,38 +79,55 @@ const ExportateurValidation = () => {
         </p>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded shadow ">
+      <div className="overflow-x-auto bg-white rounded shadow mx-auto">
         <table className="w-full table-auto text-sm">
-          <thead className="bg-gray-100 text-left">
+          <thead className="bg-gray-100">
             <tr>
-              <th className="p-3 rounded-l">Culture</th>
-              <th className="p-3">Producteur</th>
-              <th className="p-3">Date de validation</th>
-              <th className="p-3 rounded-r text-center">Action</th>
+              <th className="px-4 text-left py-3">Culture</th>
+              <th className="px-4 text-center py-3">Agriculteur</th>
+              <th className="px-4 text-right py-3">Action</th>
             </tr>
           </thead>
           <tbody>
-            {mockCultures.map((culture, index) => (
-              <tr
-                key={culture.id}
-                className={`${index % 2 !== 0 ? "bg-gray-50" : "bg-white"} border-t hover:bg-green-50 transition`}
-              >
-                <td className="p-3 font-medium text-gray-800">{culture.nom}</td>
-                <td className="p-3 text-gray-700">{culture.producteur}</td>
-                <td className="p-3 text-gray-700">
-                  {new Date(culture.dateValidation).toLocaleDateString()}
-                </td>
-                <td className="p-3 text-center">
-                  <button
-                    onClick={() => openModal(culture)}
-                    className="inline-flex items-center gap-1 text-white bg-green-700 hover:bg-green-800 px-3 py-1.5 rounded text-xs"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Valider
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {cultures.map((item, index) => {
+  const isValidated = item.transports.length > 0;
+
+  return (
+    <tr
+      key={item.culture.id}
+      className={`${
+        index % 2 !== 0 ? "bg-gray-50" : "bg-white"
+      } border-t hover:bg-green-50 transition`}
+    >
+      <td className="px-4 py-3 font-medium text-gray-800">
+        {item.culture.nom_culture}
+      </td>
+      <td className="px-4 py-3 text-center text-gray-700">
+        {item.culture.user.prenom} {item.culture.user.nom}
+      </td>
+      <td className="px-4 text-right py-3">
+        {isValidated ? (
+          <button
+            onClick={() => handleQrDownload(item.culture)}
+            className="inline-flex items-center gap-1 text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded text-xs"
+          >
+            <CheckCircle className="w-4 h-4" />
+            Code QR
+          </button>
+        ) : (
+          <button
+            onClick={() => openModal(item.culture)}
+            className="inline-flex items-center gap-1 text-white bg-green-700 hover:bg-green-800 px-3 py-1.5 rounded text-xs"
+          >
+            <CheckCircle className="w-4 h-4" />
+            Valider
+          </button>
+        )}
+      </td>
+    </tr>
+  );
+})}
+
           </tbody>
         </table>
       </div>
@@ -88,7 +137,7 @@ const ExportateurValidation = () => {
           culture={selectedCulture}
           isOpen={showModal}
           onClose={() => setShowModal(false)}
-          onSubmit={handleSubmitFinalValidation}
+          onSuccess={handleSuccess}
         />
       )}
     </DashboardLayout>

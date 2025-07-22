@@ -43,7 +43,7 @@ export default function Login() {
         navigate("/exportateur/Dashboard");
         break;
       case "controlleur":
-        navigate("/controler/Authorization");
+        navigate("/controleur/demandes");
         break;
       default:
         toast.error("Rôle inconnu. Contactez l'administrateur.");

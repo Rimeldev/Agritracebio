@@ -22,11 +22,7 @@ const Sidebar = ({ userType = "farmer" }) => {
 
   if (userType === "controlleur") {
     menuItems = [
-      {
-        to: "/controler/Authorization",
-        label: "Tableau de bord",
-        icon: <ClipboardList className="h-5 w-5" />,
-      },
+      
       {
         to: "/controleur/demandes",
         label: "Demandes reçues",

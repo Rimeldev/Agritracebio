@@ -21,6 +21,7 @@ const ExportateurDashboardView = () => {
   const [exportateurNom, setExportateurNom] = useState("");
 
   useEffect(() => {
+     let interval;
     const fetchData = async () => {
       try {
         if (!exportateur_id) {
@@ -44,7 +45,10 @@ const ExportateurDashboardView = () => {
       }
     };
 
-    fetchData();
+    fetchData(); // 1er appel immédiat
+  interval = setInterval(fetchData, 1000); // toutes les 5 secondes
+
+  return () => clearInterval(interval); 
   }, [exportateur_id]);
 
   // Données environnementales

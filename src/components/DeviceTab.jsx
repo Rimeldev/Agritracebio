@@ -1,4 +1,5 @@
 import React from "react";
+import { toast } from "react-toastify";
 
 const DispositifsTab = ({
   dispositifs,
@@ -11,8 +12,8 @@ const DispositifsTab = ({
   activateDispositif,
   deactivateDispositif,
 }) => {
-  const dataCultures = cultures;
-  const dataDispositifs = dispositifs;
+  const dataCultures = cultures || [];
+  const dataDispositifs = dispositifs || [];
 
   const cultureMap = dataCultures.reduce((acc, c) => {
     acc[c.id] = c.nom_culture;
@@ -22,6 +23,24 @@ const DispositifsTab = ({
   const culturesSansDispositif = dataCultures.filter(
     (c) => !dataDispositifs.find((d) => d.culture_id === c.id)
   );
+
+  const handleAddClick = async () => {
+    console.log("Tentative d'ajout :", newDispositif);
+
+    if (!newDispositif.nom || !newDispositif.culture_id) {
+      toast.error("Veuillez remplir tous les champs.");
+      return;
+    }
+
+    try {
+      await addDispositif(); // appel de la fonction passée en prop
+      toast.success("Dispositif ajouté avec succès.");
+      setShowAddModal(false);
+    } catch (error) {
+      toast.error("Erreur lors de l'ajout du dispositif.");
+      console.error("Erreur dans handleAddClick :", error);
+    }
+  };
 
   return (
     <section>
@@ -50,20 +69,18 @@ const DispositifsTab = ({
           </thead>
           <tbody>
             {dataDispositifs.map((dispo) => (
-<tr key={dispo.id || dispo.nom} className="border-t">
-  <td className="p-3 font-mono text-xs">{dispo.id}</td>
+              <tr key={dispo.id || dispo.nom} className="border-t">
+                <td className="p-3 font-mono text-xs">{dispo.id}</td>
                 <td className="p-3">{dispo.nom}</td>
                 <td className="p-3">{cultureMap[dispo.culture_id] || "-"}</td>
                 <td className="p-3">
-  {new Date(dispo.date_installation).toLocaleDateString()}
-</td>
-<td className="p-3">
-  {dispo.culture?.user
-    ? `${dispo.culture.user.prenom} ${dispo.culture.user.nom}`
-    : "—"}
-</td>
-
-
+                  {new Date(dispo.date_installation).toLocaleDateString()}
+                </td>
+                <td className="p-3">
+                  {dispo.culture?.user
+                    ? `${dispo.culture.user.prenom} ${dispo.culture.user.nom}`
+                    : "—"}
+                </td>
                 <td className="p-3">
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -78,14 +95,20 @@ const DispositifsTab = ({
                 <td className="p-3 space-x-2">
                   {dispo.statut === "actif" ? (
                     <button
-                      onClick={() => deactivateDispositif(dispo)}
+                      onClick={() => {
+                        console.log("Désactivation :", dispo);
+                        deactivateDispositif(dispo);
+                      }}
                       className="text-yellow-600 text-xs hover:underline"
                     >
                       Désactiver
                     </button>
                   ) : (
                     <button
-                      onClick={() => activateDispositif(dispo)}
+                      onClick={() => {
+                        console.log("Activation :", dispo);
+                        activateDispositif(dispo);
+                      }}
                       className="text-green-600 text-xs hover:underline"
                     >
                       Activer
@@ -98,6 +121,7 @@ const DispositifsTab = ({
         </table>
       </div>
 
+      {/* Modal d'ajout */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-brightness-90 flex justify-center items-center z-50">
           <div className="bg-white rounded p-6 w-full max-w-md">
@@ -119,24 +143,26 @@ const DispositifsTab = ({
                 }
                 className="w-full border rounded px-3 py-2 text-sm"
               >
-        {culturesSansDispositif.map((c) => (
-  <option key={c.id || c.nom_culture} value={c.id}>
-    {c.nom_culture}
-  </option>
-))}
-
+                <option value="">-- Sélectionner une culture --</option>
+                {culturesSansDispositif.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nom_culture}
+                  </option>
+                ))}
               </select>
               <div className="flex justify-end gap-2 mt-4">
                 <button
-                  onClick={() => setShowAddModal(false)}
+                  onClick={() => {
+                    console.log("Ajout annulé");
+                    setShowAddModal(false);
+                  }}
                   className="px-4 py-1.5 rounded text-sm text-gray-600 hover:underline"
                 >
                   Annuler
                 </button>
                 <button
-                  onClick={addDispositif}
+                  onClick={handleAddClick}
                   className="px-4 py-1.5 rounded text-sm bg-green-600 text-white hover:bg-green-700"
-                  disabled={!newDispositif.nom || !newDispositif.culture_id}
                 >
                   Ajouter
                 </button>

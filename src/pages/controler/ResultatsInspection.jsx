@@ -22,29 +22,43 @@ const ResultatsInspection = () => {
   };
 
   useEffect(() => {
-    const fetchDemandes = async () => {
-      try {
-        const allDemandes = await getAllDemandesInspection();
-        const sansEnAttente = allDemandes.filter(
-          (demande) => demande.statut !== "en_attente"
+  const fetchDemandes = async () => {
+    try {
+      const allDemandes = await getAllDemandesInspection();
+      console.log("🔍 Données brutes reçues du backend :", JSON.stringify(allDemandes, null, 2)); // 👈 AJOUTE CETTE LIGNE
+
+      const sansEnAttente = allDemandes.filter(
+        (demande) => demande.statut !== "en_attente"
+      );
+
+      const formatees = sansEnAttente.map((d, index) => {
+        const allValid = Object.values(d.resultats || {}).every(
+          (r) => r.statut === "validée"
         );
-        const formatees = sansEnAttente.map((d, index) => ({
-  ...d,
-  numero: `DEM${(index + 1).toString().padStart(3, "0")}`,
-  nbCultures: d.cultures?.length ?? 0,
-  exportateur: `${d.exportateur_id?.prenom ?? ""} ${d.exportateur_id?.nom ?? ""}`,
-  date: d.date_demande,
-}));
+        const resultatsSoumis = Object.values(d.resultats || {}).some(
+          (r) => r?.statut
+        );
 
-setDemandesEnCours(formatees);
+        return {
+          ...d,
+          numero: `DEM${(index + 1).toString().padStart(3, "0")}`,
+          nbCultures: d.cultures?.length ?? 0,
+          exportateur: `${d.exportateur_id?.prenom ?? ""} ${d.exportateur_id?.nom ?? ""}`,
+          date: d.date_demande,
+          resultatsSoumis,
+          statut: resultatsSoumis ? (allValid ? "validée" : "rejetée") : "en_cours",
+        };
+      });
 
-      } catch (error) {
-        console.error("Erreur de chargement des demandes :", error);
-      }
-    };
+      setDemandesEnCours(formatees);
+    } catch (error) {
+      console.error("Erreur de chargement des demandes :", error);
+    }
+  };
 
-    fetchDemandes();
-  }, []);
+  fetchDemandes();
+}, []);
+
 
   // Ajout du numéro formaté et nombre cultures
   const demandesAvecNumero = demandesEnCours.map((d, index) => ({
@@ -89,7 +103,7 @@ setDemandesEnCours(formatees);
     }));
   };
 
- 
+
 
 const handleSubmit = async () => {
   try {

@@ -17,10 +17,9 @@ import {
 } from "lucide-react";
 
 const EnvironmentalChart = ({ donneesEnvironnementales }) => {
-  const [selectedParam, setSelectedParam] = useState("temperature_air");
+  const [selectedParam, setSelectedParam] = useState("temperature_sol");
 
   const paramLabels = {
-    temperature_air: "Température Air (°C)",
     temperature_sol: "Température Sol (°C)",
     humidite_air: "Humidité Air (%)",
     humidite_sol: "Humidité Sol (%)",
@@ -42,10 +41,6 @@ const EnvironmentalChart = ({ donneesEnvironnementales }) => {
 
   return (
     <div className="p-4 bg-white shadow">
-     <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-  <ThermometerSun size={20} className="text-green-700" />
-  Conditions environnementales (graphe)
-</h2>
 
 
       {/* Boutons de sélection de paramètre */}

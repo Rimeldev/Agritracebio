@@ -5,7 +5,6 @@ import ChartsCarousel from "@/components/ChartsCarousel";
 import UserMenu from "@/components/UserMenu";
 import iconTempSol from "@/assets/icons/temp_sol.png";
 import iconHumSol from "@/assets/icons/hum_sol.png";
-import iconTempAir from "@/assets/icons/temp_air.png";
 import iconHumAir from "@/assets/icons/hum_air.png";
 import iconPhSol from "@/assets/icons/ph_sol.png";
 import iconQualAir from "@/assets/icons/qual_air.png";
@@ -90,7 +89,6 @@ const ExportateurDashboard = () => {
   const dataCards = [
     { icon: iconTempSol, label: "Température du sol", key: "temperature_sol", value: latestData.temperature_sol ?? "-", unit: "°C" },
     { icon: iconHumSol, label: "Humidité du sol", key: "humidite_sol", value: latestData.humidite_sol ?? "-", unit: "%" },
-    { icon: iconTempAir, label: "Température de l’air", key: "temperature_air", value: latestData.temperature_air ?? "-", unit: "°C" },
     { icon: iconHumAir, label: "Humidité de l’air", key: "humidite_air", value: latestData.humidite_air ?? "-", unit: "%" },
     { icon: iconPhSol, label: "pH du sol", key: "ph_sol", value: latestData.ph_sol ?? "-", unit: "" },
     { icon: iconQualAir, label: "Qualité de l’air", key: "qualite_air", value: latestData.qualite_air ?? "-", unit: "" },

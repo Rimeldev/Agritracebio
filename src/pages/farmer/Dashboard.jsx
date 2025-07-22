@@ -5,7 +5,6 @@ import ChartsCarousel from "@/components/ChartsCarousel";
 import UserMenu from "@/components/UserMenu";
 import iconTempSol from "@/assets/icons/temp_sol.png";
 import iconHumSol from "@/assets/icons/hum_sol.png";
-import iconTempAir from "@/assets/icons/temp_air.png";
 import iconHumAir from "@/assets/icons/hum_air.png";
 import iconPhSol from "@/assets/icons/ph_sol.png";
 import iconQualAir from "@/assets/icons/qual_air.png";
@@ -42,66 +41,102 @@ const Dashboard = () => {
 
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!selectedCulture) return;
+  let interval;
 
-      try {
-        const start = `${selectedDate}T00:00:00`;
-        const end = `${selectedDate}T23:59:59`;
-        const result = await getCultureDashboard(selectedCulture, {
-          page: 1,
-          perPage: 10,
-         startDate: start,
-        endDate: end, 
-        });
+  const fetchData = async () => {
+    if (!selectedCulture) return;
 
-        setCultureInfo(result.culture);
-        setIotData(result.donnees);
-      } catch (error) {
-        console.error("Erreur lors du chargement des données du dashboard :", error);
-      }
-    };
+    try {
+      const start = `${selectedDate}T00:00:00`;
+      const end = `${selectedDate}T23:59:59`;
+      const result = await getCultureDashboard(selectedCulture, {
+        page: 1,
+        perPage: 10,
+        startDate: start,
+        endDate: end,
+      });
 
-    fetchData();
-  }, [selectedCulture, selectedDate]);
+      setCultureInfo(result.culture);
+      setIotData(result.donnees);
+    } catch (error) {
+      console.error("Erreur lors du chargement des données du dashboard :", error);
+    }
+  };
+
+  fetchData(); // 1er appel immédiat
+  interval = setInterval(fetchData, 1000); // toutes les 5 secondes
+
+  return () => clearInterval(interval); // on nettoie l’intervalle au démontage
+}, [selectedCulture, selectedDate]);
+
 
   const latestData = iotData.length > 0 ? iotData[0] : {};
 
   const dataCards = [
     { icon: iconTempSol, label: "Température du sol", key: "temperature_sol", value: latestData.temperature_sol ?? "-", unit: "°C" },
     { icon: iconHumSol, label: "Humidité du sol", key: "humidite_sol", value: latestData.humidite_sol ?? "-", unit: "%" },
-    { icon: iconTempAir, label: "Température de l’air", key: "temperature_air", value: latestData.temperature_air ?? "-", unit: "°C" },
     { icon: iconHumAir, label: "Humidité de l’air", key: "humidite_air", value: latestData.humidite_air ?? "-", unit: "%" },
     { icon: iconPhSol, label: "pH du sol", key: "ph_sol", value: latestData.ph_sol ?? "-", unit: "" },
     { icon: iconQualAir, label: "Qualité de l’air", key: "qualite_air", value: latestData.qualite_air ?? "-", unit: "" },
   ];
 
-  const chartDataByParameter = {
+ const chartDataByParameter = {
   "Température du sol": iotData.map((d) => ({
-    date: new Date(d.date_creation).toLocaleDateString("fr-FR"),
+    date: new Date(d.date_creation).toLocaleString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
     valeur: parseFloat(d.temperature_sol),
   })),
-  "Température de l’air": iotData.map((d) => ({
-    date: new Date(d.date_creation).toLocaleDateString("fr-FR"),
-    valeur: parseFloat(d.temperature_air),
-  })),
+
   "Humidité du sol": iotData.map((d) => ({
-    date: new Date(d.date_creation).toLocaleDateString("fr-FR"),
+    date: new Date(d.date_creation).toLocaleString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
     valeur: parseFloat(d.humidite_sol),
   })),
+
   "Humidité de l’air": iotData.map((d) => ({
-    date: new Date(d.date_creation).toLocaleDateString("fr-FR"),
+    date: new Date(d.date_creation).toLocaleString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
     valeur: parseFloat(d.humidite_air),
   })),
+
   "pH du sol": iotData.map((d) => ({
-    date: new Date(d.date_creation).toLocaleDateString("fr-FR"),
+    date: new Date(d.date_creation).toLocaleString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
     valeur: parseFloat(d.ph_sol),
   })),
+
   "Qualité de l’air": iotData.map((d) => ({
-    date: new Date(d.date_creation).toLocaleDateString("fr-FR"),
+    date: new Date(d.date_creation).toLocaleString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
     valeur: parseFloat(d.qualite_air),
   })),
 };
+
 
 
   return (

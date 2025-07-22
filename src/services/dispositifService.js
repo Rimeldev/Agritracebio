@@ -6,6 +6,11 @@ export const addDispositifToCulture = async (dispositifData) => {
   const token = localStorage.getItem("token");
 
   try {
+
+     if (!token) {
+  console.error("Aucun token trouvé dans localStorage.");
+  throw new Error("Authentification requise.");
+}
     const response = await axios.post(
       API_URL,
       {
@@ -18,6 +23,8 @@ export const addDispositifToCulture = async (dispositifData) => {
         },
       }
     );
+   
+
 
     return response.data;
   } catch (error) {

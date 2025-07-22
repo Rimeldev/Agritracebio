@@ -5,7 +5,6 @@ import {
 
 const parametres = [
   "Température du sol",
-  "Température de l’air",
   "Humidité du sol",
   "Humidité de l’air",
   "pH du sol",

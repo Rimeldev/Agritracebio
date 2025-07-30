@@ -9,7 +9,10 @@ import { toast } from "react-toastify";
 
 
 const handleQrDownload = async (culture) => {
-  const traceUrl = `${window.location.origin}/trace/${culture.id}`;
+const PC_IP = "192.168.4.4"; // remplace par ton IP
+const FRONT_PORT = "5173";    // ou 3000, selon ton serveur
+const traceUrl = `http://${PC_IP}:${FRONT_PORT}/trace/${culture.id}`;
+
   try {
     const qrDataUrl = await QRCode.toDataURL(traceUrl);
     const link = document.createElement("a");

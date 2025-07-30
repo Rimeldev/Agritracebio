@@ -29,7 +29,7 @@ const [showImageModal, setShowImageModal] = useState(false);
     const fetchCulture = async () => {
       try {
         const response = await axios.get(
-          `http://127.0.0.1:5000/api/controleur/culture/${culture_id}/details-complets`
+          `http://192.168.4.4:5000/api/controleur/culture/${culture_id}/details-complets`
         );
         setData(response.data.data);
       } catch (error) {
@@ -165,7 +165,7 @@ const [showImageModal, setShowImageModal] = useState(false);
           </button>
 
           <img
-            src={`http://localhost:5000/${transport.images_camion[0]}`}
+            src={`http://192.168.4.4:5000/${transport.images_camion[0]}`}
             alt="État du véhicule"
             className="rounded-lg w-full object-contain max-h-[70vh]"
           />
